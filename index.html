@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Mood Ring Journal</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            body {
+                transition: background-color 1s ease;
+                background-color: rgb(235, 177, 253);
+                color: black;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+            }
+
+            h1{
+                font-size: 2.5rem;
+                font-weight: 400;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .chat-container {
+                width: 100%;
+                max-width: 700px;
+                position: relative;
+            }
+
+            #JournalInput {
+                width: 100%;
+                padding: 20px 25px;
+                font-size: 1.1rem;
+                border-radius: 30px;
+                border: 1px solid #444;
+                background-color: #2d2d3f;
+                color: white;
+                outline: none;
+                transition: border 0.3s;
+                resize: none;
+                overflow-y: hidden;
+                line-height: 1.5;
+            }
+
+            #JournalInput:focus {
+                border: 1px solid #888;
+            }
+
+            .reply-box {
+                margin-top: 30px;
+                padding: 20px;
+                border-radius: 15px;
+                background-color: rgba(0, 0, 0, 0.3); /* Transparent dark box */
+                width: 100%;
+                max-width: 700px;
+                text-align: left;
+            }
+
+            .stats {
+                font-size: 0.9rem;
+                color: #ccc;
+                margin-top: 10px;
+            }
+
+            h1 {
+                transition: opacity 0.5s ease, height 0.5s ease, margin 0.5s ease;
+                opacity: 1;
+                height: auto;
+            }
+
+            body.chat-active h1 {
+                opacity: 0;
+                height: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            body.chat-active {
+                justify-content: flex-end;
+                padding-bottom: 40px; 
+            }
+
+            body.chat-active .reply-box {
+                margin-bottom: 20px;
+            }
+
+            #chatHistory {
+                width: 100%;
+                max-width: 700px;  
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            body.chat-active #chatHistory {
+                flex: 1;
+                justify-content: flex-start;
+            }
+
+            .user-message {
+                align-self: flex-end;
+                background-color: #4a4a6a;
+                color: white;
+                padding: 12px 18px;
+                border-radius: 18px;
+                max-width: 80%;
+            }
+
+            .ai-message {
+                align-self: flex-start;
+                background-color: rgba(0, 0, 0, 0.3);
+                color: white;
+                padding: 12px 18px;
+                border-radius: 18px;
+                max-width: 80%;
+            }
+
+            .chat-container:has(#JournalInput) {
+                width: 100%;
+                max-width: 700px;
+            }
+
+            body.chat-active .chat-container:has(#JournalInput) {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            body.chat-active {
+                padding-bottom: 140px;
+            }
+
+            .info-toggle {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                border: none;
+                background-color: rgba(0, 0, 0, 0.3);
+                font-size: 1.3rem;
+                cursor: pointer;
+                z-index: 10; 
+            }
+
+            .info-panel {
+                position: fixed;
+                top: 75px;
+                right: 20px;
+                background-color: rgba(0, 0, 0, 0.85);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 12px;
+                font-size: 0.9rem;
+                z-index: 10;
+
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(-10px);
+                transition: opacity 0.2s ease, transform 0.2s ease;
+            }
+
+            .info-panel.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateY(0);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;             
+                background: rgba(0,0,0,0.4);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+                z-index: 20;
+            }
+
+            .sidebar-overlay.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -280px;  
+                width: 260px;
+                height: 100vh;
+                background-color: #1e1e2f;
+                color: white;
+                padding: 20px 15px;
+                box-sizing: border-box;
+                transition: left 0.3s ease;
+                z-index: 21;
+                overflow-y: auto;
+            }
+
+            .sidebar.open {
+                left: 0;                 
+            }
+
+            .new-chat-btn {
+                width: 100%;
+                padding: 12px;
+                border-radius: 10px;
+                border: 1px solid #555;
+                background-color: transparent;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+
+            .chat-list-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                margin-bottom: 5px;
+                font-size: 0.9rem;
+            }
+
+            .chat-title {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex: 1;
+                margin-right: 8px;
+            }
+
+            .chat-actions {
+                display: flex;
+                gap: 2px;
+                opacity: 0;             
+                transition: opacity 0.2s ease;
+                flex-shrink: 0;
+            }
+
+            .chat-list-item:hover .chat-actions {
+                opacity: 1;
+            }
+
+            .chat-action-btn {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                font-size: 0.85rem;
+                padding: 2px 5px;
+            }
+
+            .chat-list-item:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+            .chat-list-item.active {
+                background-color: rgba(255,255,255,0.2);
+            }
+
+            .mouse-blob {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 400px;
+                height: 400px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(255,255,255,0.55), transparent 70%);
+                pointer-events: none;      
+                transform: translate(-50%, -50%);  
+                transition: left 0.15s ease-out, top 0.15s ease-out;
+                filter: blur(30px);             
+                mix-blend-mode: overlay;
+                opacity: 1;
+            }
+            body.chat-active .mouse-blob {
+                opacity: 0;
+            }
+            .typing-dots span {
+                animation: blink 1.4s infinite both;
+            }
+            .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+            .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+            @keyframes blink {
+                0%, 80%, 100% { opacity: 0.2; }
+                40% { opacity: 1; }
+            }
+
+            .chat-options-menu {
+                position: fixed;
+                background-color: #2d2d3f;
+                border: 1px solid #444;
+                border-radius: 10px;
+                padding: 6px;
+                display: none;  
+                flex-direction: column;
+                z-index: 30;  
+                min-width: 140px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            }
+
+            .chat-options-menu.open {
+                display: flex;
+            }
+
+            .menu-item {
+                background: none;
+                border: none;
+                color: white;
+                text-align: left;
+                padding: 8px 10px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.9rem;
+            }
+
+            .menu-item:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+            .menu-item-danger:hover {
+                background-color: rgba(255,80,80,0.2);
+            }
+
+            .kebab-btn {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                font-size: 1.1rem;
+                padding: 2px 8px;
+                flex-shrink: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="mouseBlob" class="mouse-blob"></div>
+
+        <button id="infoToggle" class="info-toggle">🎭</button>
+
+
+        <button id="sidebarToggle" class="info-toggle" style="left: 20px; right: auto;">☰</button>
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+        <div id="sidebar" class="sidebar">
+            <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
+            <div id="chatList" class="chat-list"></div>
+        </div>
+
+        <div id="chatOptionsMenu" class="chat-options-menu">
+            <button id="menuStarBtn" class="menu-item">🌟 Star</button>
+            <button id="menuRenameBtn" class="menu-item">📜 Rename</button>
+            <button id="menuDeleteBtn" class="menu-item menu-item-danger">🧨 Delete</button>
+        </div>
+
+        <div id="infoPanel" class="info-panel">
+            <p>Detected Emotion: <span id="resultDisplay">None</span></p>
+            <p>Confidence: <span id="confidenceDisplay">None</span></p>
+        </div>
+        <h1>Hello, Tell me about your day</h1>
+        <div class="chat-container" id="chatHistory"></div>
+        <div class="chat-container">
+            <textarea id="JournalInput" rows="1" placeholder="Type your Journal Entry and click Enter..."></textarea>
+        </div>
+        <script>
+            const JournalInput=document.getElementById("JournalInput");
+            const chatHistory = document.getElementById("chatHistory");
+            const infoToggle = document.getElementById("infoToggle");
+            const infoPanel = document.getElementById("infoPanel");
+            const resultDisplay = document.getElementById("resultDisplay");
+            const resetBtn = document.getElementById("resetBtn");
+            const confidenceDisplay = document.getElementById("confidenceDisplay");
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const sidebarOverlay = document.getElementById("sidebarOverlay");
+            const sidebar = document.getElementById("sidebar");
+            const newChatBtn = document.getElementById("newChatBtn");
+            const chatList = document.getElementById("chatList");
+            const mouseBlob = document.getElementById("mouseBlob");
+            const chatOptionsMenu = document.getElementById("chatOptionsMenu");
+            const menuStarBtn = document.getElementById("menuStarBtn");
+            const menuRenameBtn = document.getElementById("menuRenameBtn");
+            const menuDeleteBtn = document.getElementById("menuDeleteBtn");
+
+
+
+            let allChats = {};
+            let currentChatId = null;
+            function loadAllChats(){
+                const saved = localStorage.getItem("moodRingChats");
+                allChats = saved ? JSON.parse(saved) : {};
+            }
+            function saveAllChats(){
+                localStorage.setItem("moodRingChats", JSON.stringify(allChats));
+            }
+            function renderChatList() {
+                chatList.innerHTML = "";
+
+                const allIds = Object.keys(allChats).reverse();
+                const starredIds = allIds.filter(id => allChats[id].starred);
+                const unstarredIds = allIds.filter(id => !allChats[id].starred);
+                const orderedIds = starredIds.concat(unstarredIds);
+
+                orderedIds.forEach(function(chatId) {
+                    const item = document.createElement("div");
+                    item.className = "chat-list-item" + (chatId === currentChatId ? " active" : "");
+
+                    const titleSpan = document.createElement("span");
+                    titleSpan.className = "chat-title";
+                    titleSpan.textContent = (allChats[chatId].starred ? "🌟 " : "") + (allChats[chatId].title || "New chat");
+                    item.appendChild(titleSpan);
+
+                    const kebabBtn = document.createElement("button");
+                    kebabBtn.className = "kebab-btn";
+                    kebabBtn.textContent = "⋮";
+                    kebabBtn.addEventListener("click", (e) => {
+                        e.stopPropagation(); 
+                        openChatOptionsMenu(chatId, kebabBtn);
+                    });
+                    item.appendChild(kebabBtn);
+
+                    item.addEventListener("click", () => switchToChat(chatId));
+                    chatList.appendChild(item);
+                });
+            }
+            function renderChatOnPage(chatId) {
+                chatHistory.innerHTML = "";
+                const messages = allChats[chatId].messages;
+
+                messages.forEach(function(message) {
+                    const bubble = document.createElement("div");
+                    bubble.className = message.sender === "user" ? "user-message" : "ai-message";
+                    bubble.textContent = message.text;
+                    chatHistory.appendChild(bubble);
+                });
+
+                if (messages.length > 0) {
+                    document.body.classList.add("chat-active");
+                } else {
+                    document.body.classList.remove("chat-active");
+                }
+                document.body.style.backgroundColor = allChats[chatId].lastColor || "rgb(235, 177, 253)";
+            }
+            function switchToChat(chatId) {
+                currentChatId = chatId;
+                localStorage.setItem("moodRingCurrentChatId", currentChatId);
+                renderChatOnPage(chatId);
+                renderChatList();
+                if (shouldCloseSidebar) {
+                    closeSidebar();
+                }
+            }
+            function startNewChat(shouldCloseSidebar = true) {
+                const newId = "chat_" + Date.now(); 
+                allChats[newId] = { title: "", messages: [] };
+                saveAllChats();
+                switchToChat(newId);
+            }
+            function addMessage(sender, text) {
+                const bubble = document.createElement("div");
+                bubble.className = sender === "user" ? "user-message" : "ai-message";
+                if (text == "typing........"){
+                    bubble.innerHTML='<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
+                }
+                else{
+                    bubble.textContent = text;
+                }
+                chatHistory.appendChild(bubble);
+
+                const chat = allChats[currentChatId];
+                chat.messages.push({ sender: sender, text: text });
+                saveAllChats();
+                renderChatList();
+                return bubble;
+            }
+            function openSidebar() {
+                sidebar.classList.add("open");
+                sidebarOverlay.classList.add("open");
+            }
+            function closeSidebar() {
+                sidebar.classList.remove("open");
+                sidebarOverlay.classList.remove("open");
+            }
+
+            let menuTargetChatId = null;
+            function openChatOptionsMenu(chatId, buttonElement) {
+                menuTargetChatId = chatId;
+
+                menuStarBtn.textContent = allChats[chatId].starred ? "🌟 Unstar" : "🌟 Star";
+
+                const rect = buttonElement.getBoundingClientRect();
+
+                chatOptionsMenu.style.top = rect.bottom + 5 + "px";
+                chatOptionsMenu.style.left = rect.left + "px";
+                chatOptionsMenu.classList.add("open");
+
+            }
+
+            function closeChatOptionsMenu() {
+                chatOptionsMenu.classList.remove("open");
+                menuTargetChatId = null;
+            }
+
+            menuStarBtn.addEventListener("click", () => {
+                allChats[menuTargetChatId].starred = !allChats[menuTargetChatId].starred;
+                saveAllChats();
+                renderChatList();
+                closeChatOptionsMenu();
+            });
+
+            menuRenameBtn.addEventListener("click", () => {
+                const newTitle = prompt("Rename this chat:", allChats[menuTargetChatId].title);
+                if (newTitle !== null && newTitle.trim() !== "") {
+                    allChats[menuTargetChatId].title = newTitle.trim();
+                    saveAllChats();
+                    renderChatList();
+                }
+                closeChatOptionsMenu();
+            });
+
+            document.addEventListener("click", (e) => {
+                if (!chatOptionsMenu.contains(e.target)) {
+                    closeChatOptionsMenu();
+                }
+            });
+            sidebarToggle.addEventListener("click", openSidebar);
+            sidebarOverlay.addEventListener("click", closeSidebar);
+            newChatBtn.addEventListener("click", startNewChat);
+
+            loadAllChats();
+            const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
+
+            if (lastActiveId && allChats[lastActiveId]) {
+                currentChatId = lastActiveId;
+                renderChatOnPage(currentChatId);
+            } else if (Object.keys(allChats).length > 0) {
+                currentChatId = Object.keys(allChats).pop();
+                renderChatOnPage(currentChatId);
+            } else {
+                startNewChat();
+            }
+            renderChatList();
+            
+            const emotionsColors = {
+                joy: "#FFF3B0",       
+                sadness: "#A9CCE3",  
+                anger: "#F5B7B1",   
+                fear: "#D2B4DE",      
+                disgust: "#ABEBC6",   
+                surprise: "#FAD7A0", 
+                neutral: "#EAECEE"
+            }
+
+            JournalInput.addEventListener("input", function() {
+                this.style.height = "auto";
+                this.style.height = this.scrollHeight + "px"; 
+            });
+
+            menuDeleteBtn.addEventListener("click", () => {
+                const sure = confirm("Delete this chat? This can't be undone.");
+                if (sure) {
+                    const deletedId = menuTargetChatId;
+                    delete allChats[deletedId];
+                    saveAllChats();
+
+                    if (deletedId === currentChatId) {
+                        const remainingIds = Object.keys(allChats);
+                        if (remainingIds.length > 0) {
+                            switchToChat(remainingIds[remainingIds.length - 1], false); 
+                        } else {
+                            startNewChat(false);
+                        }
+                    } else {
+                        renderChatList();
+                    }
+                }
+                closeChatOptionsMenu();
+            });
+
+            document.addEventListener("mousemove", (event) => {
+                mouseBlob.style.left = event.clientX + "px";
+                mouseBlob.style.top = event.clientY + "px";
+            });
+
+            JournalInput.addEventListener ("keydown", async (event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    const textToAnalyze=JournalInput.value;
+
+                    if (textToAnalyze.trim() === "") return;
+
+                    if (JournalInput.disabled) return;
+                    JournalInput.disabled = true;
+
+                    document.body.classList.add("chat-active");
+                    JournalInput.value = "";
+                    JournalInput.style.height = "auto"; 
+
+                    addMessage("user", textToAnalyze);
+                    const aiBubble = addMessage("ai", "typing........");
+
+                    window.scrollTo(0, document.body.scrollHeight);
+
+                    try{
+                        const response = await fetch("http://127.0.0.1:8000/analyze", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({text: textToAnalyze})
+                        });
+                        if (!response.ok) {
+                            aiBubble.textContent = "Something went wrong on the server (error " + response.status + ").";
+                            JournalInput.disabled = false;
+                            JournalInput.focus();
+                            return;
+                        }
+
+                        const data = await response.json();
+
+                        aiBubble.textContent = data.reply;
+                        if (allChats[currentChatId].title === "") {
+                            allChats[currentChatId].title = data.title;
+                        }
+                        allChats[currentChatId].messages[allChats[currentChatId].messages.length - 1].text = data.reply;
+                        saveAllChats();
+                        renderChatList();
+
+                        resultDisplay.textContent = data.emotion;
+                        confidenceDisplay.textContent = (data.confidence * 100).toFixed(1) + "%";
+
+                        const newColor = emotionsColors[data.emotion] || "rgb(235, 177, 253)";
+                        document.body.style.backgroundColor = newColor;
+                        allChats[currentChatId].lastColor = newColor;
+                        saveAllChats();
+                        window.scrollTo(0, document.body.scrollHeight);
+                        JournalInput.disabled = false;
+                        JournalInput.focus();
+                    } catch (error) {
+                        aiBubble.textContent = "Couldn't reach the server — check that your backend is running.";
+                        console.error("Network Error: ", error);
+                        JournalInput.disabled = false;
+                        JournalInput.focus();
+                    }
+                }
+            });
+            infoToggle.addEventListener("click", () => {
+                infoPanel.classList.toggle("open");
+            });
+        </script>
+    </body>
+</html>
