@@ -344,6 +344,47 @@
                 padding: 2px 8px;
                 flex-shrink: 0;
             }
+
+            .stats-modal {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.95);
+                background: white;
+                padding: 15px;
+                border-radius: 12px;
+                z-index: 31;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease, transform 0.2s ease;
+            }
+
+            .stats-modal.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            .stats-modal img {
+                max-width: 80vw;
+                max-height: 80vh;
+                display: block;
+                border-radius: 6px;
+            }
+
+            .modal-close-btn {
+                position: absolute;
+                top: -12px;
+                right: -12px;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: none;
+                background-color: #2d2d3f;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+            }
         </style>
     </head>
     <body>
@@ -351,6 +392,16 @@
 
         <button id="infoToggle" class="info-toggle">🎭</button>
 
+        <div id="sidebar" class="sidebar">
+            <button id="statsBtn" class="new-chat-btn">📊 Export Mood Stats</button>
+            <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
+            <div id="chatList" class="chat-list"></div>
+        </div>
+        <div id="statsModalOverlay" class="sidebar-overlay"></div>
+        <div id="statsModal" class="stats-modal">
+            <button id="statsModalClose" class="modal-close-btn">✕</button>
+            <img id="statsImage" alt="Mood stats chart">
+        </div>
 
         <button id="sidebarToggle" class="info-toggle" style="left: 20px; right: auto;">☰</button>
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
@@ -392,8 +443,11 @@
             const menuStarBtn = document.getElementById("menuStarBtn");
             const menuRenameBtn = document.getElementById("menuRenameBtn");
             const menuDeleteBtn = document.getElementById("menuDeleteBtn");
-
-
+            const statsBtn = document.getElementById("statsBtn");
+            const statsModalOverlay = document.getElementById("statsModalOverlay");
+            const statsModal = document.getElementById("statsModal");
+            const statsImage = document.getElementById("statsImage");
+            const statsModalClose = document.getElementById("statsModalClose");
 
             let allChats = {};
             let currentChatId = null;
@@ -452,7 +506,7 @@
                 }
                 document.body.style.backgroundColor = allChats[chatId].lastColor || "rgb(235, 177, 253)";
             }
-            function switchToChat(chatId) {
+            function switchToChat(chatId, shouldCloseSidebar = true) {
                 currentChatId = chatId;
                 localStorage.setItem("moodRingCurrentChatId", currentChatId);
                 renderChatOnPage(chatId);
@@ -462,10 +516,10 @@
                 }
             }
             function startNewChat(shouldCloseSidebar = true) {
-                const newId = "chat_" + Date.now(); 
+                const newId = "chat_" + Date.now();
                 allChats[newId] = { title: "", messages: [] };
                 saveAllChats();
-                switchToChat(newId);
+                switchToChat(newId, shouldCloseSidebar);
             }
             function addMessage(sender, text) {
                 const bubble = document.createElement("div");
@@ -511,6 +565,43 @@
                 chatOptionsMenu.classList.remove("open");
                 menuTargetChatId = null;
             }
+
+            statsBtn.addEventListener("click", async () => {
+                const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
+
+                if (moodLog.length === 0) {
+                    alert("No mood data yet — send a few messages first!");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("http://127.0.0.1:8000/stats", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ entries: moodLog })
+                    });
+
+                    const blob = await response.blob(); 
+                    const imageUrl = URL.createObjectURL(blob);
+                    statsImage.src = imageUrl;
+
+                    statsModal.classList.add("open");
+                    statsModalOverlay.classList.add("open");
+                } catch (error) {
+                    alert("Couldn't generate stats right now.");
+                    console.error(error);
+                }
+            });
+
+            statsModalOverlay.addEventListener("click", () => {
+                statsModal.classList.remove("open");
+                statsModalOverlay.classList.remove("open");
+            });
+
+            statsModalClose.addEventListener("click", () => {
+                statsModal.classList.remove("open");
+                statsModalOverlay.classList.remove("open");
+            });
 
             menuStarBtn.addEventListener("click", () => {
                 allChats[menuTargetChatId].starred = !allChats[menuTargetChatId].starred;
@@ -634,6 +725,13 @@
                             allChats[currentChatId].title = data.title;
                         }
                         allChats[currentChatId].messages[allChats[currentChatId].messages.length - 1].text = data.reply;
+                        const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
+                        moodLog.push({
+                            emotion: data.emotion,
+                            confidence: data.confidence,
+                            timestamp: Date.now()
+                        });
+localStorage.setItem("moodRingMoodLog", JSON.stringify(moodLog));
                         saveAllChats();
                         renderChatList();
 
