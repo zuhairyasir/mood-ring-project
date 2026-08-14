@@ -790,14 +790,17 @@
 
             loadAllChats();
             cleanupEmptyChats();
+            const isRefresh = sessionStorage.getItem("moodRingSessionActive");
             const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
-            if (lastActiveId && allChats[lastActiveId]) {
+
+            if (isRefresh && lastActiveId && allChats[lastActiveId]) {
                 currentChatId = lastActiveId;
                 renderChatOnPage(currentChatId);
                 renderChatList();
             } else {
                 startNewChat();
             }
+            sessionStorage.setItem("moodRingSessionActive", "true");
             
             const emotionsColors = {
                 joy: "#FFF3B0",       
