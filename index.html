@@ -516,7 +516,7 @@
             function renderChatList() {
                 chatList.innerHTML = "";
 
-                const allIds = Object.keys(allChats).reverse();
+                const allIds = Object.keys(allChats).reverse().filter(id => allChats[id].messages.length > 0);
                 const visibleIds = currentSearchFilter ? allIds.filter(id => currentSearchFilter.includes(id)) : allIds;
                 const starredIds = visibleIds.filter(id => allChats[id].starred);
                 const unstarredIds = visibleIds.filter(id => !allChats[id].starred);
@@ -574,7 +574,6 @@
             function startNewChat(shouldCloseSidebar = true) {
                 const newId = "chat_" + Date.now();
                 allChats[newId] = { title: "", messages: [] };
-                saveAllChats();
                 switchToChat(newId, shouldCloseSidebar);
             }
             function addMessage(sender, text) {
@@ -590,7 +589,7 @@
 
                 const chat = allChats[currentChatId];
                 chat.messages.push({ sender: sender, text: text });
-                saveAllChats();
+                saveAllChats(); 
                 renderChatList();
                 return bubble;
             }
@@ -663,7 +662,18 @@
                 sidebar.classList.remove("open");
                 sidebarOverlay.classList.remove("open");
             }
-
+            function cleanupEmptyChats() {
+                let removedAny = false;
+                for (const chatId in allChats) {
+                    if (allChats[chatId].messages.length === 0) {
+                        delete allChats[chatId];
+                        removedAny = true;
+                    }
+                }
+                if (removedAny) {
+                    saveAllChats();
+                }
+            }
             let menuTargetChatId = null;
             function openChatOptionsMenu(chatId, buttonElement) {
                 menuTargetChatId = chatId;
@@ -779,18 +789,15 @@
             newChatBtn.addEventListener("click", startNewChat);
 
             loadAllChats();
+            cleanupEmptyChats();
             const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
-
             if (lastActiveId && allChats[lastActiveId]) {
                 currentChatId = lastActiveId;
                 renderChatOnPage(currentChatId);
-            } else if (Object.keys(allChats).length > 0) {
-                currentChatId = Object.keys(allChats).pop();
-                renderChatOnPage(currentChatId);
+                renderChatList();
             } else {
                 startNewChat();
             }
-            renderChatList();
             
             const emotionsColors = {
                 joy: "#FFF3B0",       
