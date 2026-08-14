@@ -74,7 +74,7 @@ for _ in range(5):
     end = time.perf_counter()
     title_latencies.append(end - start)
 
-with open("EVALUATION.md", "w") as f:
+with open("EVALUATION.md", "w", encoding="utf-8") as f:
     f.write("# Mood-Ring Journal — Technical Evaluation\n\n")
 
     f.write("## Emotion Classifier Accuracy\n\n")
