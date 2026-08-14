@@ -385,6 +385,55 @@
                 cursor: pointer;
                 font-size: 1rem;
             }
+
+            .search-input {
+                width: 100%;
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid #444;
+                background-color: #2d2d3f;
+                color: white;
+                margin-bottom: 10px;
+                font-size: 0.9rem;
+            }
+
+            .search-wrapper {
+                position: relative;
+                margin-bottom: 10px;
+            }
+
+            .search-wrapper .search-input {
+                margin-bottom: 0;  
+                padding-right: 30px; 
+            }
+
+            .search-clear-btn {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: #999;
+                cursor: pointer;
+                font-size: 0.8rem;
+                padding: 4px;
+            }
+
+            .send-btn {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background-color: #4a4a6a;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+            }
         </style>
     </head>
     <body>
@@ -393,6 +442,10 @@
         <button id="infoToggle" class="info-toggle">🎭</button>
 
         <div id="sidebar" class="sidebar">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search entries...">
+                <button id="searchClearBtn" class="search-clear-btn">✕</button>
+            </div>
             <button id="statsBtn" class="new-chat-btn">📊 Export Mood Stats</button>
             <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
             <div id="chatList" class="chat-list"></div>
@@ -405,10 +458,6 @@
 
         <button id="sidebarToggle" class="info-toggle" style="left: 20px; right: auto;">☰</button>
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
-        <div id="sidebar" class="sidebar">
-            <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
-            <div id="chatList" class="chat-list"></div>
-        </div>
 
         <div id="chatOptionsMenu" class="chat-options-menu">
             <button id="menuStarBtn" class="menu-item">🌟 Star</button>
@@ -424,6 +473,7 @@
         <div class="chat-container" id="chatHistory"></div>
         <div class="chat-container">
             <textarea id="JournalInput" rows="1" placeholder="Type your Journal Entry and click Enter..."></textarea>
+            <button id="sendBtn" class="send-btn">➤</button>
         </div>
         <script>
             const JournalInput=document.getElementById("JournalInput");
@@ -438,6 +488,7 @@
             const sidebar = document.getElementById("sidebar");
             const newChatBtn = document.getElementById("newChatBtn");
             const chatList = document.getElementById("chatList");
+            const sendBtn = document.getElementById("sendBtn");
             const mouseBlob = document.getElementById("mouseBlob");
             const chatOptionsMenu = document.getElementById("chatOptionsMenu");
             const menuStarBtn = document.getElementById("menuStarBtn");
@@ -448,9 +499,13 @@
             const statsModal = document.getElementById("statsModal");
             const statsImage = document.getElementById("statsImage");
             const statsModalClose = document.getElementById("statsModalClose");
+            const searchInput = document.getElementById("searchInput");
+            const searchClearBtn = document.getElementById("searchClearBtn");
 
             let allChats = {};
             let currentChatId = null;
+            let currentSearchFilter = null;
+
             function loadAllChats(){
                 const saved = localStorage.getItem("moodRingChats");
                 allChats = saved ? JSON.parse(saved) : {};
@@ -462,8 +517,9 @@
                 chatList.innerHTML = "";
 
                 const allIds = Object.keys(allChats).reverse();
-                const starredIds = allIds.filter(id => allChats[id].starred);
-                const unstarredIds = allIds.filter(id => !allChats[id].starred);
+                const visibleIds = currentSearchFilter ? allIds.filter(id => currentSearchFilter.includes(id)) : allIds;
+                const starredIds = visibleIds.filter(id => allChats[id].starred);
+                const unstarredIds = visibleIds.filter(id => !allChats[id].starred);
                 const orderedIds = starredIds.concat(unstarredIds);
 
                 orderedIds.forEach(function(chatId) {
@@ -538,6 +594,67 @@
                 renderChatList();
                 return bubble;
             }
+            async function sendMessage() {
+                const textToAnalyze = JournalInput.value;
+
+                if (textToAnalyze.trim() === "") return;
+                if (JournalInput.disabled) return;
+                JournalInput.disabled = true;
+
+                document.body.classList.add("chat-active");
+                JournalInput.value = "";
+                JournalInput.style.height = "auto";
+
+                addMessage("user", textToAnalyze);
+                const aiBubble = addMessage("ai", "typing........");
+
+                window.scrollTo(0, document.body.scrollHeight);
+
+                try {
+                    const response = await fetch("http://127.0.0.1:8000/analyze", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text: textToAnalyze })
+                    });
+                    if (!response.ok) {
+                        aiBubble.textContent = "Something went wrong on the server (error " + response.status + ").";
+                        JournalInput.disabled = false;
+                        JournalInput.focus();
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    aiBubble.textContent = data.reply;
+                    if (allChats[currentChatId].title === "") {
+                        allChats[currentChatId].title = data.title;
+                    }
+                    allChats[currentChatId].messages[allChats[currentChatId].messages.length - 1].text = data.reply;
+
+                    const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
+                    moodLog.push({ emotion: data.emotion, confidence: data.confidence, timestamp: Date.now() });
+                    localStorage.setItem("moodRingMoodLog", JSON.stringify(moodLog));
+
+                    saveAllChats();
+                    renderChatList();
+
+                    resultDisplay.textContent = data.emotion;
+                    confidenceDisplay.textContent = (data.confidence * 100).toFixed(1) + "%";
+
+                    const newColor = emotionsColors[data.emotion] || "rgb(235, 177, 253)";
+                    document.body.style.backgroundColor = newColor;
+                    allChats[currentChatId].lastColor = newColor;
+                    saveAllChats();
+                    window.scrollTo(0, document.body.scrollHeight);
+                    JournalInput.disabled = false;
+                    JournalInput.focus();
+                } catch (error) {
+                    aiBubble.textContent = "Couldn't reach the server — check that your backend is running.";
+                    console.error("Network Error: ", error);
+                    JournalInput.disabled = false;
+                    JournalInput.focus();
+                }
+            }
             function openSidebar() {
                 sidebar.classList.add("open");
                 sidebarOverlay.classList.add("open");
@@ -565,6 +682,14 @@
                 chatOptionsMenu.classList.remove("open");
                 menuTargetChatId = null;
             }
+
+            function clearSearch() {
+                searchInput.value = "";
+                currentSearchFilter = null;
+                renderChatList();
+            }
+
+            searchClearBtn.addEventListener("click", clearSearch);
 
             statsBtn.addEventListener("click", async () => {
                 const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
@@ -608,6 +733,30 @@
                 saveAllChats();
                 renderChatList();
                 closeChatOptionsMenu();
+            });
+
+            searchInput.addEventListener("keydown", async (event) => {
+                if (event.key === "Enter") {
+                    const query = searchInput.value.trim();
+
+                    if (query === "") {
+                        clearSearch();
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch("http://127.0.0.1:8000/search", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ chats: allChats, query: query })
+                        });
+                        const data = await response.json();
+                        currentSearchFilter = data.matching_chat_ids;
+                        renderChatList();
+                    } catch (error) {
+                        console.error("Search error:", error);
+                    }
+                }
             });
 
             menuRenameBtn.addEventListener("click", () => {
@@ -684,75 +833,14 @@
                 mouseBlob.style.top = event.clientY + "px";
             });
 
-            JournalInput.addEventListener ("keydown", async (event) => {
+            JournalInput.addEventListener("keydown", (event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
-                    const textToAnalyze=JournalInput.value;
-
-                    if (textToAnalyze.trim() === "") return;
-
-                    if (JournalInput.disabled) return;
-                    JournalInput.disabled = true;
-
-                    document.body.classList.add("chat-active");
-                    JournalInput.value = "";
-                    JournalInput.style.height = "auto"; 
-
-                    addMessage("user", textToAnalyze);
-                    const aiBubble = addMessage("ai", "typing........");
-
-                    window.scrollTo(0, document.body.scrollHeight);
-
-                    try{
-                        const response = await fetch("http://127.0.0.1:8000/analyze", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({text: textToAnalyze})
-                        });
-                        if (!response.ok) {
-                            aiBubble.textContent = "Something went wrong on the server (error " + response.status + ").";
-                            JournalInput.disabled = false;
-                            JournalInput.focus();
-                            return;
-                        }
-
-                        const data = await response.json();
-
-                        aiBubble.textContent = data.reply;
-                        if (allChats[currentChatId].title === "") {
-                            allChats[currentChatId].title = data.title;
-                        }
-                        allChats[currentChatId].messages[allChats[currentChatId].messages.length - 1].text = data.reply;
-                        const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
-                        moodLog.push({
-                            emotion: data.emotion,
-                            confidence: data.confidence,
-                            timestamp: Date.now()
-                        });
-localStorage.setItem("moodRingMoodLog", JSON.stringify(moodLog));
-                        saveAllChats();
-                        renderChatList();
-
-                        resultDisplay.textContent = data.emotion;
-                        confidenceDisplay.textContent = (data.confidence * 100).toFixed(1) + "%";
-
-                        const newColor = emotionsColors[data.emotion] || "rgb(235, 177, 253)";
-                        document.body.style.backgroundColor = newColor;
-                        allChats[currentChatId].lastColor = newColor;
-                        saveAllChats();
-                        window.scrollTo(0, document.body.scrollHeight);
-                        JournalInput.disabled = false;
-                        JournalInput.focus();
-                    } catch (error) {
-                        aiBubble.textContent = "Couldn't reach the server — check that your backend is running.";
-                        console.error("Network Error: ", error);
-                        JournalInput.disabled = false;
-                        JournalInput.focus();
-                    }
+                    sendMessage();
                 }
             });
+            sendBtn.addEventListener("click", sendMessage);
+
             infoToggle.addEventListener("click", () => {
                 infoPanel.classList.toggle("open");
             });

@@ -1,3 +1,5 @@
+# python -m http.server 5500
+# http://127.0.0.1:5500
 # uvicorn main:app --reload
 # git add .
 # git commit -m "Initial commit: working Mood-Ring Journal with emotion detection, AI replies, chat history sidebar"
@@ -6,7 +8,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-
+from models import JournalEntry, MoodLogPayload, SearchPayload
+from search_service import SearchService
 from emotion_service import EmotionService
 from reply_service import ReplyService
 from fastapi.responses import StreamingResponse
@@ -27,11 +30,17 @@ app.add_middleware(
 stats_service = StatsService()
 emotion_service = EmotionService()
 reply_service = ReplyService()
+search_service = SearchService()
 
 @app.post("/stats")
 def get_stats(payload: MoodLogPayload):
     buffer = stats_service.generate_emotion_chart(payload.entries)
     return StreamingResponse(buffer, media_type="image/png")
+
+@app.post("/search")
+def search_chats(payload: SearchPayload):
+    matching_ids = search_service.build_and_search(payload.chats, payload.query)
+    return {"matching_chat_ids": matching_ids}
 
 @app.get("/")
 def read_root():
