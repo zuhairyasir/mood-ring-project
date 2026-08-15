@@ -5,12 +5,37 @@
         <title>Mood Ring Journal</title>
         <style>
             :root {
-            --mood-color: rgb(235, 177, 253);
-        }
+                 --mood-color: rgb(235, 177, 253);
+            }
 
             * {
                 box-sizing: border-box;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            /* Mobile URL */
+            @media (max-width: 600px) {
+                h1 {
+                    font-size: 1.8rem; 
+                }
+
+                .sidebar {
+                    width: 85vw;
+                    left: -85vw;
+                }
+
+                .chat-container {
+                    padding: 0 10px;
+
+                .user-message,
+                .ai-message {
+                    max-width: 90%;
+            }
+
+            @media (hover: none) {
+                .mouse-blob {
+                    display: none;
+                }
             }
 
             /* Body */
