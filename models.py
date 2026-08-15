@@ -26,3 +26,8 @@ class MoodEntry(BaseModel):
 
 class MoodLogPayload(BaseModel):
     entries: List[MoodEntry]
+
+from pydantic import BaseModel, Field
+
+class JournalEntry(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)

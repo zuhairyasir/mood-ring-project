@@ -15,6 +15,7 @@ from reply_service import ReplyService
 from fastapi.responses import StreamingResponse
 from models import JournalEntry, MoodLogPayload
 from stats_service import StatsService
+import base64
 
 load_dotenv()
 
@@ -34,8 +35,16 @@ search_service = SearchService()
 
 @app.post("/stats")
 def get_stats(payload: MoodLogPayload):
-    buffer = stats_service.generate_emotion_chart(payload.entries)
-    return StreamingResponse(buffer, media_type="image/png")
+    emotion_buffer = stats_service.generate_emotion_chart(payload.entries)
+    confidence_buffer = stats_service.generate_confidence_chart(payload.entries)
+    emotion_b64 = base64.b64encode(emotion_buffer.read()).decode("utf-8")
+    confidence_b64 = base64.b64encode(confidence_buffer.read()).decode("utf-8")
+    return {
+        "charts": [
+            f"data:image/png;base64,{emotion_b64}",
+            f"data:image/png;base64,{confidence_b64}"
+        ]
+    }
 
 @app.post("/search")
 def search_chats(payload: SearchPayload):
