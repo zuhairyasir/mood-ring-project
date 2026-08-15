@@ -4,6 +4,10 @@
         <meta charset="UTF-8">
         <title>Mood Ring Journal</title>
         <style>
+            :root {
+            --mood-color: rgb(235, 177, 253);
+        }
+
             * {
                 box-sizing: border-box;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -56,11 +60,26 @@
                 max-width: 700px;
             }
 
-            body.chat-active .chat-container:has(#JournalInput) {
+            .input-bar {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+            }
+
+           body.chat-active .input-bar {
                 position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                padding: 40px 20px 20px;
+                background: linear-gradient(
+                    to top,
+                    var(--mood-color) 0%,
+                    var(--mood-color) 55%,
+                    transparent 100%
+                );
+                transition: background-color 1s ease;
+                z-index: 15;
             }
 
             #JournalInput {
@@ -108,8 +127,7 @@
             }
 
             body.chat-active #chatHistory {
-                flex: 1;
-                justify-content: flex-start;
+                 margin-top: 100px; 
             }
 
             .user-message {
@@ -536,11 +554,14 @@
         </div>
         <h1>Hello, Tell me about your day</h1>
         <div class="chat-container" id="chatHistory"></div>
-        <div class="chat-container">
-            <textarea id="JournalInput" rows="1" placeholder="Type your Journal Entry and click Enter..."></textarea>
-            <button id="sendBtn" class="send-btn">➤</button>
+
+        <div id="inputBar" class="input-bar">
+            <div class="chat-container">
+                <textarea id="JournalInput" rows="1" placeholder="Type your Journal Entry and click Enter..."></textarea>
+                <button id="sendBtn" class="send-btn">➤</button>
+            </div>
         </div>
-        <script>
+            <script>
             const JournalInput=document.getElementById("JournalInput");
             const chatHistory = document.getElementById("chatHistory");
             const infoToggle = document.getElementById("infoToggle");
@@ -615,6 +636,10 @@
             function renderChatOnPage(chatId) {
                 chatHistory.innerHTML = "";
                 const messages = allChats[chatId].messages;
+
+                const bgColor = allChats[chatId].lastColor || localStorage.getItem("moodRingDefaultColor") || "rgb(235, 177, 253)";
+                document.body.style.backgroundColor = bgColor;
+                document.body.style.setProperty("--mood-color", bgColor);
 
                 messages.forEach(function(message) {
                     const bubble = document.createElement("div");
@@ -710,6 +735,7 @@
 
                     const newColor = emotionsColors[data.emotion] || "rgb(235, 177, 253)";
                     document.body.style.backgroundColor = newColor;
+                    document.body.style.setProperty("--mood-color", newColor);
                     allChats[currentChatId].lastColor = newColor;
                     saveAllChats();
                     window.scrollTo(0, document.body.scrollHeight);
@@ -776,6 +802,7 @@
                 localStorage.setItem("moodRingDefaultColor", chosenColor);
                 if (allChats[currentChatId] && allChats[currentChatId].messages.length === 0) {
                     document.body.style.backgroundColor = chosenColor;
+                    document.body.style.setProperty("--mood-color", chosenColor);
                 }
             });
 
