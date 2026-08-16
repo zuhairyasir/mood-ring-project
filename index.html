@@ -144,6 +144,114 @@
                 font-size: 1rem;
             }
 
+            #JournalInput {
+                padding-right: 90px; 
+            }
+
+            .mic-btn {
+                position: absolute;
+                right: 52px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background-color: #4a4a6a;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+            }
+
+            .mic-btn.recording {
+                background-color: #b34a4a;
+                animation: mic-pulse 1s infinite;
+            }
+
+            @keyframes mic-pulse {
+                0%, 100% { transform: translateY(-50%) scale(1); }
+                50% { transform: translateY(-50%) scale(1.15); }
+            }
+
+            .speak-btn {
+                display: block;
+                margin-top: 8px;
+                background: none;
+                border: none;
+                color: rgba(255,255,255,0.7);
+                cursor: pointer;
+                font-size: 0.9rem;
+                padding: 2px 4px;
+            }
+
+            .speak-btn:hover {
+                color: white;
+            }
+
+            .voice-bar {
+                display: none;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                max-width: 700px;
+                padding: 15px 20px;
+                border-radius: 30px;
+                background-color: #2d2d3f;
+            }
+
+            .voice-bar.active {
+                display: flex;
+            }
+
+            .voice-waveform {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                height: 20px;
+            }
+
+            .voice-waveform span {
+                width: 3px;
+                height: 100%;
+                background-color: rgba(255,255,255,0.6);
+                border-radius: 2px;
+                animation: waveform-bounce 1s infinite ease-in-out;
+            }
+
+            .voice-waveform span:nth-child(1) { animation-delay: 0s; }
+            .voice-waveform span:nth-child(2) { animation-delay: 0.1s; }
+            .voice-waveform span:nth-child(3) { animation-delay: 0.2s; }
+            .voice-waveform span:nth-child(4) { animation-delay: 0.3s; }
+            .voice-waveform span:nth-child(5) { animation-delay: 0.4s; }
+            .voice-waveform span:nth-child(6) { animation-delay: 0.5s; }
+            .voice-waveform span:nth-child(7) { animation-delay: 0.4s; }
+            .voice-waveform span:nth-child(8) { animation-delay: 0.3s; }
+            .voice-waveform span:nth-child(9) { animation-delay: 0.2s; }
+            .voice-waveform span:nth-child(10) { animation-delay: 0.1s; }
+
+            @keyframes waveform-bounce {
+                0%, 100% { transform: scaleY(0.3); }
+                50% { transform: scaleY(1); }
+            }
+
+            .voice-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border: none;
+                background-color: #4a4a6a;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+                flex-shrink: 0;
+            }
+
+            .voice-send {
+                background-color: #6a4a9a;
+            }
+
             /* Chat history */
             #chatHistory {
                 width: 100%;
@@ -290,6 +398,7 @@
                 letter-spacing: 0.05em;
                 color: #888;
                 margin: 24px 0 10px 4px;
+                font-weight: 700;
             }
 
             .color-wheel-row {
@@ -313,6 +422,7 @@
             .color-wheel-text {
                 font-size: 0.85rem;
                 color: #ccc;
+                font-weight: 600;
             }
 
             .chat-list-item {
@@ -386,6 +496,24 @@
 
             .menu-item-danger:hover {
                 background-color: rgba(255,80,80,0.2);
+            }
+
+            .settings-modal {
+                text-align: left;
+                min-width: 280px;
+                background: #1e1e2f; 
+                color: white;
+            }
+
+            .pitch-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .pitch-row input[type="range"] {
+                flex: 1;
             }
 
             /* Popups */
@@ -573,15 +701,9 @@
             <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
             <p class="sidebar-label">Stats</p>
             <button id="statsBtn" class="new-chat-btn">📊 Export Mood Stats</button>
-            <p class="sidebar-label">Default Page</p>
-            <div class="color-wheel-row">
-                <input type="color" id="defaultColorPicker" class="color-wheel-input" value="#ebb1fd">
-                <span class="color-wheel-text">New chat background</span>
-            </div>
-            <div class="color-wheel-row">
-                <input type="color" id="blobColorPicker" class="color-wheel-input" value="#ffffff">
-                <span class="color-wheel-text">Cursor glow color</span>
-            </div>
+
+           <button id="settingsBtn" class="new-chat-btn">⚙️ Settings</button>
+
             <p class="sidebar-label">Starred</p>
             <div id="starredChatList" class="chat-list"></div>
             <p class="sidebar-label">Chats</p>
@@ -593,6 +715,25 @@
             <button id="statsPrevBtn" class="stats-nav-btn stats-nav-prev">‹</button>
             <img id="statsImage" alt="Mood stats chart">
             <button id="statsNextBtn" class="stats-nav-btn stats-nav-next">›</button>
+        </div>
+        <div id="settingsModalOverlay" class="sidebar-overlay"></div>
+        <div id="settingsModal" class="stats-modal settings-modal">
+            <button id="settingsModalClose" class="modal-close-btn">✕</button>
+            <p class="sidebar-label">Default Page</p>
+            <div class="color-wheel-row">
+                <input type="color" id="defaultColorPicker" class="color-wheel-input" value="#ebb1fd">
+                <span class="color-wheel-text">New chat background</span>
+            </div>
+            <div class="color-wheel-row">
+                <input type="color" id="blobColorPicker" class="color-wheel-input" value="#ffffff">
+                <span class="color-wheel-text">Cursor glow color</span>
+            </div>
+            <p class="sidebar-label">Voice</p>
+            <div class="pitch-row">
+                <span class="color-wheel-text">Voice pitch</span>
+                <input type="range" id="pitchSlider" min="0" max="2" step="0.1" value="1">
+                <span id="pitchValue" class="color-wheel-text">1.0</span>
+            </div>
         </div>
 
         <button id="sidebarToggle" class="info-toggle" style="left: 20px; right: auto;">☰</button>
@@ -614,10 +755,22 @@
         <div id="inputBar" class="input-bar">
             <div class="chat-container">
                 <textarea id="JournalInput" rows="1" placeholder="Type your Journal Entry and click Enter..."></textarea>
+                <button id="micBtn" class="mic-btn">🎤</button>
                 <button id="sendBtn" class="send-btn">➤</button>
             </div>
         </div>
-            <script>
+        <div id="voiceBar" class="voice-bar">
+            <button id="voiceCancelBtn" class="voice-btn">+</button>
+            <div class="voice-waveform">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <button id="voiceStopBtn" class="voice-btn">■</button>
+            <button id="voiceSendBtn" class="voice-btn voice-send">↑</button>
+        </div>
+       
+        <script>
+           // ===== element references =====
             const JournalInput=document.getElementById("JournalInput");
             const chatHistory = document.getElementById("chatHistory");
             const infoToggle = document.getElementById("infoToggle");
@@ -648,13 +801,51 @@
             const blobColorPicker = document.getElementById("blobColorPicker");
             const statsPrevBtn = document.getElementById("statsPrevBtn");
             const statsNextBtn = document.getElementById("statsNextBtn");
+            const micBtn = document.getElementById("micBtn");
+            const voiceBar = document.getElementById("voiceBar");
+            const voiceCancelBtn = document.getElementById("voiceCancelBtn");
+            const voiceStopBtn = document.getElementById("voiceStopBtn");
+            const voiceSendBtn = document.getElementById("voiceSendBtn");
+            const settingsBtn = document.getElementById("settingsBtn");
+            const settingsModal = document.getElementById("settingsModal");
+            const settingsModalOverlay = document.getElementById("settingsModalOverlay");
+            const settingsModalClose = document.getElementById("settingsModalClose");
+            const pitchSlider = document.getElementById("pitchSlider");
+            const pitchValue = document.getElementById("pitchValue");
 
+            // ===== Constant data =====
+            const emotionsColors = {
+                joy: "#FFF3B0",
+                sadness: "#A9CCE3",
+                anger: "#F5B7B1",
+                fear: "#D2B4DE",
+                disgust: "#ABEBC6",
+                surprise: "#FAD7A0",
+                neutral: "#EAECEE"
+            }
+
+            const emotionsEmojis = {
+                joy: "😄",
+                sadness: "😢",
+                anger: "😠",
+                fear: "😨",
+                disgust: "🤢",
+                surprise: "😲",
+                neutral: "😐"
+            };
+
+            // ===== State variables =====
             let allChats = {};
             let currentChatId = null;
             let currentSearchFilter = null;
             let statsCharts = [];
             let currentStatsIndex = 0;
+            let pendingAutoSend = false;
+            let menuTargetChatId = null;
+            let recognition = null;
+            let isRecording = false;
 
+            // ===== Functions =====
             function loadAllChats(){
                 const saved = localStorage.getItem("moodRingChats");
                 allChats = saved ? JSON.parse(saved) : {};
@@ -706,6 +897,9 @@
                     const bubble = document.createElement("div");
                     bubble.className = message.sender === "user" ? "user-message" : "ai-message";
                     bubble.textContent = message.text;
+                    if (message.sender === "ai") {
+                        bubble.appendChild(createSpeakButton(message.text));
+                    }
                     chatHistory.appendChild(bubble);
                 });
 
@@ -714,6 +908,7 @@
                 } else {
                     document.body.classList.remove("chat-active");
                 }
+                infoToggle.textContent = emotionsEmojis[allChats[chatId].lastEmotion] || "🎭";
                 document.body.style.backgroundColor = allChats[chatId].lastColor || localStorage.getItem("moodRingDefaultColor") || "rgb(235, 177, 253)";
             }
             function switchToChat(chatId, shouldCloseSidebar = true) {
@@ -738,12 +933,15 @@
                 }
                 else{
                     bubble.textContent = text;
+                    if (sender === "ai") {
+                        bubble.appendChild(createSpeakButton(text));
+                    }
                 }
                 chatHistory.appendChild(bubble);
 
                 const chat = allChats[currentChatId];
                 chat.messages.push({ sender: sender, text: text });
-                saveAllChats(); 
+                saveAllChats();
                 renderChatList();
                 return bubble;
             }
@@ -779,6 +977,7 @@
                     const data = await response.json();
 
                     aiBubble.textContent = data.reply;
+                    aiBubble.appendChild(createSpeakButton(data.reply));
                     if (allChats[currentChatId].title === "") {
                         allChats[currentChatId].title = data.title;
                     }
@@ -798,6 +997,9 @@
                     document.body.style.backgroundColor = newColor;
                     document.body.style.setProperty("--mood-color", newColor);
                     allChats[currentChatId].lastColor = newColor;
+                    allChats[currentChatId].lastEmotion = data.emotion;
+                    infoToggle.textContent = emotionsEmojis[data.emotion] || "🎭";
+
                     saveAllChats();
                     window.scrollTo(0, document.body.scrollHeight);
                     JournalInput.disabled = false;
@@ -833,7 +1035,6 @@
                     saveAllChats();
                 }
             }
-            let menuTargetChatId = null;
             function openChatOptionsMenu(chatId, buttonElement) {
                 menuTargetChatId = chatId;
 
@@ -844,24 +1045,141 @@
                 chatOptionsMenu.style.top = rect.bottom + 5 + "px";
                 chatOptionsMenu.style.left = rect.left + "px";
                 chatOptionsMenu.classList.add("open");
-
             }
-
             function closeChatOptionsMenu() {
                 chatOptionsMenu.classList.remove("open");
                 menuTargetChatId = null;
             }
-
+            function speakText(text) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.pitch = parseFloat(localStorage.getItem("moodRingPitch") || "1");
+                window.speechSynthesis.speak(utterance);
+            }
+            function createSpeakButton(text) {
+                const speakBtn = document.createElement("button");
+                speakBtn.className = "speak-btn";
+                speakBtn.textContent = "🔊";
+                speakBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    speakText(text);
+                });
+                return speakBtn;
+            }
             function clearSearch() {
                 searchInput.value = "";
                 currentSearchFilter = null;
                 renderChatList();
             }
+            function hexToRgbString(hex) {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return `${r}, ${g}, ${b}`;
+            }
 
+            // ===== Speech setup =====
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = "en-US";
+
+                recognition.addEventListener("result", (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    JournalInput.value += (JournalInput.value ? " " : "") + transcript;
+                    JournalInput.dispatchEvent(new Event("input"));
+                });
+
+                recognition.addEventListener("end", () => {
+                    isRecording = false;
+                    micBtn.classList.remove("recording");
+
+                    voiceBar.classList.remove("active");
+                    JournalInput.style.display = "";
+                    sendBtn.style.display = "";
+                    micBtn.style.display = "";
+                    JournalInput.style.height = "auto";
+                    JournalInput.style.height = JournalInput.scrollHeight + "px";
+
+                    if (pendingAutoSend) {
+                        pendingAutoSend = false;
+                        sendMessage();
+                    }
+                });
+
+                recognition.addEventListener("error", (event) => {
+                    isRecording = false;
+                    micBtn.classList.remove("recording");
+                    voiceBar.classList.remove("active");
+                    JournalInput.style.display = "";
+                    sendBtn.style.display = "";
+                    micBtn.style.display = "";
+                    console.error("Speech recognition error:", event.error);
+                });
+
+                micBtn.addEventListener("click", () => {
+                    if (isRecording) return;
+
+                    recognition.start();
+                    isRecording = true;
+
+                    JournalInput.style.display = "none";
+                    sendBtn.style.display = "none";
+                    micBtn.style.display = "none";
+                    voiceBar.classList.add("active");
+                });
+
+                voiceStopBtn.addEventListener("click", () => {
+                    recognition.stop();
+                });
+
+                voiceSendBtn.addEventListener("click", () => {
+                    pendingAutoSend = true;
+                    recognition.stop();
+                });
+
+                voiceCancelBtn.addEventListener("click", () => {
+                    recognition.abort();
+                });
+            } else {
+                micBtn.style.display = "none";
+            }
+
+            // ===== Startup =====
             const savedDefaultColor = localStorage.getItem("moodRingDefaultColor");
             if (savedDefaultColor) {
                 defaultColorPicker.value = savedDefaultColor;
             }
+
+            const savedBlobColor = localStorage.getItem("moodRingBlobColor");
+            if (savedBlobColor) {
+                blobColorPicker.value = savedBlobColor;
+                document.body.style.setProperty("--blob-color", hexToRgbString(savedBlobColor));
+            }
+
+            const savedPitch = localStorage.getItem("moodRingPitch");
+            if (savedPitch) {
+                pitchSlider.value = savedPitch;
+                pitchValue.textContent = parseFloat(savedPitch).toFixed(1);
+            }
+
+            loadAllChats();
+            cleanupEmptyChats();
+            const isRefresh = sessionStorage.getItem("moodRingSessionActive");
+            const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
+
+            if (isRefresh && lastActiveId && allChats[lastActiveId]) {
+                currentChatId = lastActiveId;
+                renderChatOnPage(currentChatId);
+                renderChatList();
+            } else {
+                startNewChat();
+            }
+            sessionStorage.setItem("moodRingSessionActive", "true");
+
+            // ===== Event listeners =====
             defaultColorPicker.addEventListener("input", () => {
                 const chosenColor = defaultColorPicker.value;
                 localStorage.setItem("moodRingDefaultColor", chosenColor);
@@ -871,7 +1189,42 @@
                 }
             });
 
+            blobColorPicker.addEventListener("input", () => {
+                const chosenHex = blobColorPicker.value;
+                localStorage.setItem("moodRingBlobColor", chosenHex);
+                document.body.style.setProperty("--blob-color", hexToRgbString(chosenHex));
+            });
+
+            pitchSlider.addEventListener("input", () => {
+                localStorage.setItem("moodRingPitch", pitchSlider.value);
+                pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1);
+            });
+
             searchClearBtn.addEventListener("click", clearSearch);
+
+            searchInput.addEventListener("keydown", async (event) => {
+                if (event.key === "Enter") {
+                    const query = searchInput.value.trim();
+
+                    if (query === "") {
+                        clearSearch();
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch("http://127.0.0.1:8000/search", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ chats: allChats, query: query })
+                        });
+                        const data = await response.json();
+                        currentSearchFilter = data.matching_chat_ids;
+                        renderChatList();
+                    } catch (error) {
+                        console.error("Search error:", error);
+                    }
+                }
+            });
 
             statsBtn.addEventListener("click", async () => {
                 const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
@@ -909,25 +1262,6 @@
                 const newIndex = (currentStatsIndex + 1) % statsCharts.length;
                 showStatsChart(newIndex);
             });
-            
-            function hexToRgbString(hex) {
-                const r = parseInt(hex.slice(1, 3), 16);
-                const g = parseInt(hex.slice(3, 5), 16);
-                const b = parseInt(hex.slice(5, 7), 16);
-                return `${r}, ${g}, ${b}`;
-            }
-
-            const savedBlobColor = localStorage.getItem("moodRingBlobColor");
-            if (savedBlobColor) {
-                blobColorPicker.value = savedBlobColor;
-                document.body.style.setProperty("--blob-color", hexToRgbString(savedBlobColor));
-            }
-
-            blobColorPicker.addEventListener("input", () => {
-                const chosenHex = blobColorPicker.value;
-                localStorage.setItem("moodRingBlobColor", chosenHex);
-                document.body.style.setProperty("--blob-color", hexToRgbString(chosenHex));
-            });
 
             statsModalOverlay.addEventListener("click", () => {
                 statsModal.classList.remove("open");
@@ -939,35 +1273,27 @@
                 statsModalOverlay.classList.remove("open");
             });
 
+            settingsBtn.addEventListener("click", () => {
+                settingsModal.classList.add("open");
+                settingsModalOverlay.classList.add("open");
+                closeSidebar();
+            });
+
+            settingsModalOverlay.addEventListener("click", () => {
+                settingsModal.classList.remove("open");
+                settingsModalOverlay.classList.remove("open");
+            });
+
+            settingsModalClose.addEventListener("click", () => {
+                settingsModal.classList.remove("open");
+                settingsModalOverlay.classList.remove("open");
+            });
+
             menuStarBtn.addEventListener("click", () => {
                 allChats[menuTargetChatId].starred = !allChats[menuTargetChatId].starred;
                 saveAllChats();
                 renderChatList();
                 closeChatOptionsMenu();
-            });
-
-            searchInput.addEventListener("keydown", async (event) => {
-                if (event.key === "Enter") {
-                    const query = searchInput.value.trim();
-
-                    if (query === "") {
-                        clearSearch();
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch("http://127.0.0.1:8000/search", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ chats: allChats, query: query })
-                        });
-                        const data = await response.json();
-                        currentSearchFilter = data.matching_chat_ids;
-                        renderChatList();
-                    } catch (error) {
-                        console.error("Search error:", error);
-                    }
-                }
             });
 
             menuRenameBtn.addEventListener("click", () => {
@@ -980,44 +1306,6 @@
                 closeChatOptionsMenu();
             });
 
-            document.addEventListener("click", (e) => {
-                if (!chatOptionsMenu.contains(e.target)) {
-                    closeChatOptionsMenu();
-                }
-            });
-            sidebarToggle.addEventListener("click", openSidebar);
-            sidebarOverlay.addEventListener("click", closeSidebar);
-            newChatBtn.addEventListener("click", startNewChat);
-
-            loadAllChats();
-            cleanupEmptyChats();
-            const isRefresh = sessionStorage.getItem("moodRingSessionActive");
-            const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
-
-            if (isRefresh && lastActiveId && allChats[lastActiveId]) {
-                currentChatId = lastActiveId;
-                renderChatOnPage(currentChatId);
-                renderChatList();
-            } else {
-                startNewChat();
-            }
-            sessionStorage.setItem("moodRingSessionActive", "true");
-            
-            const emotionsColors = {
-                joy: "#FFF3B0",       
-                sadness: "#A9CCE3",  
-                anger: "#F5B7B1",   
-                fear: "#D2B4DE",      
-                disgust: "#ABEBC6",   
-                surprise: "#FAD7A0", 
-                neutral: "#EAECEE"
-            }
-
-            JournalInput.addEventListener("input", function() {
-                this.style.height = "auto";
-                this.style.height = this.scrollHeight + "px"; 
-            });
-
             menuDeleteBtn.addEventListener("click", () => {
                 const sure = confirm("Delete this chat? This can't be undone.");
                 if (sure) {
@@ -1028,7 +1316,7 @@
                     if (deletedId === currentChatId) {
                         const remainingIds = Object.keys(allChats);
                         if (remainingIds.length > 0) {
-                            switchToChat(remainingIds[remainingIds.length - 1], false); 
+                            switchToChat(remainingIds[remainingIds.length - 1], false);
                         } else {
                             startNewChat(false);
                         }
@@ -1039,9 +1327,24 @@
                 closeChatOptionsMenu();
             });
 
+            document.addEventListener("click", (e) => {
+                if (!chatOptionsMenu.contains(e.target)) {
+                    closeChatOptionsMenu();
+                }
+            });
+
             document.addEventListener("mousemove", (event) => {
                 mouseBlob.style.left = event.clientX + "px";
                 mouseBlob.style.top = event.clientY + "px";
+            });
+
+            sidebarToggle.addEventListener("click", openSidebar);
+            sidebarOverlay.addEventListener("click", closeSidebar);
+            newChatBtn.addEventListener("click", startNewChat);
+
+            JournalInput.addEventListener("input", function() {
+                this.style.height = "auto";
+                this.style.height = this.scrollHeight + "px";
             });
 
             JournalInput.addEventListener("keydown", (event) => {
@@ -1050,6 +1353,7 @@
                     sendMessage();
                 }
             });
+
             sendBtn.addEventListener("click", sendMessage);
 
             infoToggle.addEventListener("click", () => {
