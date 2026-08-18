@@ -110,6 +110,62 @@
                 z-index: 15;
             }
 
+            .user-message-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                align-self: flex-end;
+                max-width: 80%;
+            }
+
+            .edit-msg-btn {
+                background: none;
+                border: none;
+                color: rgba(0,0,0,0.5);
+                cursor: pointer;
+                font-size: 0.9rem;
+                padding: 2px 4px;
+                margin-top: 4px;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
+
+            .user-message-wrapper:hover .edit-msg-btn {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .edit-msg-btn:hover {
+                color: white;
+            }
+
+            .edit-textarea {
+                width: 100%;
+                background: rgba(0,0,0,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 10px;
+                color: white;
+                padding: 8px;
+                font-family: inherit;
+                font-size: inherit;
+                resize: vertical;
+            }
+
+            .edit-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 6px;
+            }
+
+            .edit-action-btn {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                font-size: 0.9rem;
+            }
+
             #JournalInput {
                 width: 100%;
                 padding: 20px 25px;
@@ -142,6 +198,10 @@
                 color: white;
                 cursor: pointer;
                 font-size: 1rem;
+            }
+
+            .stop-btn {
+                background-color: #b34a4a;
             }
 
             #JournalInput {
@@ -267,12 +327,10 @@
             }
 
             .user-message {
-                align-self: flex-end;
                 background-color: #4a4a6a;
                 color: white;
                 padding: 12px 18px;
                 border-radius: 18px;
-                max-width: 80%;
             }
 
             .ai-message {
@@ -390,6 +448,25 @@
                 cursor: pointer;
                 font-size: 1rem;
                 margin-bottom: 24px;
+            }
+
+            .folder-header {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 12px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                margin-bottom: 4px;
+                font-size: 0.9rem;
+            }
+
+            .folder-header:hover {
+                background-color: rgba(255,255,255,0.1);
+            }
+
+            .folder-contents {
+                padding-left: 16px;
             }
 
             .sidebar-label {
@@ -699,6 +776,7 @@
                 <button id="searchClearBtn" class="search-clear-btn">✕</button>
             </div>
             <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
+            <button id="tempChatBtn" class="new-chat-btn">👻 Temporary Chat</button>
             <p class="sidebar-label">Stats</p>
             <button id="statsBtn" class="new-chat-btn">📊 Export Mood Stats</button>
 
@@ -706,6 +784,8 @@
 
             <p class="sidebar-label">Starred</p>
             <div id="starredChatList" class="chat-list"></div>
+            <p class="sidebar-label">Folders</p>
+            <div id="folderList" class="chat-list"></div>
             <p class="sidebar-label">Chats</p>
             <div id="chatList" class="chat-list"></div>
         </div>
@@ -741,6 +821,7 @@
 
         <div id="chatOptionsMenu" class="chat-options-menu">
             <button id="menuStarBtn" class="menu-item">🌟 Star</button>
+            <button id="menuFolderBtn" class="menu-item">📁 Folder</button>
             <button id="menuRenameBtn" class="menu-item">📜 Rename</button>
             <button id="menuDeleteBtn" class="menu-item menu-item-danger">🧨 Delete</button>
         </div>
@@ -757,6 +838,7 @@
                 <textarea id="JournalInput" rows="1" placeholder="Type your Journal Entry and click Enter..."></textarea>
                 <button id="micBtn" class="mic-btn">🎤</button>
                 <button id="sendBtn" class="send-btn">➤</button>
+                <button id="stopBtn" class="send-btn stop-btn" style="display:none;">■</button>
             </div>
         </div>
         <div id="voiceBar" class="voice-bar">
@@ -812,6 +894,10 @@
             const settingsModalClose = document.getElementById("settingsModalClose");
             const pitchSlider = document.getElementById("pitchSlider");
             const pitchValue = document.getElementById("pitchValue");
+            const stopBtn = document.getElementById("stopBtn");
+            const tempChatBtn = document.getElementById("tempChatBtn");
+            const menuFolderBtn = document.getElementById("menuFolderBtn");
+            const folderList = document.getElementById("folderList");
 
             // ===== Constant data =====
             const emotionsColors = {
@@ -844,8 +930,73 @@
             let menuTargetChatId = null;
             let recognition = null;
             let isRecording = false;
+            let currentAbortController = null;
+            let tempChat = null;
+            let expandedFolders = new Set();
 
             // ===== Functions =====
+            function createEditButton(index, currentText) {
+                const editBtn = document.createElement("button");
+                editBtn.className = "edit-msg-btn";
+                editBtn.textContent = "✏️";
+                editBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const wrapper = e.target.closest(".user-message-wrapper");
+                    const bubble = wrapper.querySelector(".user-message");
+                    startEditingMessage(bubble, index, currentText);
+                });
+                return editBtn;
+            }
+
+            function startEditingMessage(bubble, index, currentText) {
+                bubble.innerHTML = "";
+
+                const editInput = document.createElement("textarea");
+                editInput.className = "edit-textarea";
+                editInput.value = currentText;
+                bubble.appendChild(editInput);
+
+                const actionsRow = document.createElement("div");
+                actionsRow.className = "edit-actions";
+
+                const confirmBtn = document.createElement("button");
+                confirmBtn.className = "edit-action-btn";
+                confirmBtn.textContent = "✓";
+                confirmBtn.addEventListener("click", () => {
+                    const newText = editInput.value.trim();
+                    if (newText === "") return;
+
+                    const isTemp = currentChatId === "temp";
+                    const messages = isTemp ? tempChat.messages : allChats[currentChatId].messages;
+                    messages.length = index;
+
+                    if (!isTemp) {
+                        if (index === 0) {
+                            allChats[currentChatId].title = "";
+                        }
+                        saveAllChats();
+                    }
+
+                    renderChatOnPage(currentChatId);
+                    if (!isTemp) renderChatList();
+
+                    JournalInput.value = newText;
+                    sendMessage();
+                });
+
+                const cancelBtn = document.createElement("button");
+                cancelBtn.className = "edit-action-btn";
+                cancelBtn.textContent = "✕";
+                cancelBtn.addEventListener("click", () => {
+                    renderChatOnPage(currentChatId); 
+                });
+
+                actionsRow.appendChild(confirmBtn);
+                actionsRow.appendChild(cancelBtn);
+                bubble.appendChild(actionsRow);
+
+                editInput.focus();
+            }
             function loadAllChats(){
                 const saved = localStorage.getItem("moodRingChats");
                 allChats = saved ? JSON.parse(saved) : {};
@@ -856,18 +1007,26 @@
             function renderChatList() {
                 chatList.innerHTML = "";
                 starredChatList.innerHTML = "";
+                folderList.innerHTML = "";
 
                 const allIds = Object.keys(allChats).reverse().filter(id => allChats[id].messages.length > 0);
                 const visibleIds = currentSearchFilter ? allIds.filter(id => currentSearchFilter.includes(id)) : allIds;
-                const starredIds = visibleIds.filter(id => allChats[id].starred);
-                const unstarredIds = visibleIds.filter(id => !allChats[id].starred);
+
+                // Foldered chats are pulled out first, so they never ALSO show
+                // up in Starred/Chats — each chat appears in exactly one place.
+                const folderedIds = visibleIds.filter(id => allChats[id].folder);
+                const unfolderedIds = visibleIds.filter(id => !allChats[id].folder);
+
+                const starredIds = unfolderedIds.filter(id => allChats[id].starred);
+                const unstarredIds = unfolderedIds.filter(id => !allChats[id].starred);
+
                 function buildChatItem(chatId) {
                     const item = document.createElement("div");
                     item.className = "chat-list-item" + (chatId === currentChatId ? " active" : "");
 
                     const titleSpan = document.createElement("span");
                     titleSpan.className = "chat-title";
-                    titleSpan.textContent = allChats[chatId].title || "New chat";
+                    titleSpan.textContent = (allChats[chatId].starred ? "🌟 " : "") + (allChats[chatId].title || "New chat");
                     item.appendChild(titleSpan);
 
                     const kebabBtn = document.createElement("button");
@@ -882,25 +1041,64 @@
                     item.addEventListener("click", () => switchToChat(chatId));
                     return item;
                 }
+                const folderNames = [...new Set(folderedIds.map(id => allChats[id].folder))].sort();
+
+                folderNames.forEach(function(folderName) {
+                    const isExpanded = expandedFolders.has(folderName);
+
+                    const header = document.createElement("div");
+                    header.className = "folder-header";
+                    header.textContent = (isExpanded ? "📂 " : "📁 ") + folderName;
+                    header.addEventListener("click", () => {
+                        if (isExpanded) {
+                            expandedFolders.delete(folderName);
+                        } else {
+                            expandedFolders.add(folderName);
+                        }
+                        renderChatList();
+                    });
+                    folderList.appendChild(header);
+
+                    if (isExpanded) {
+                        const contents = document.createElement("div");
+                        contents.className = "folder-contents";
+                        folderedIds
+                            .filter(id => allChats[id].folder === folderName)
+                            .forEach(id => contents.appendChild(buildChatItem(id)));
+                        folderList.appendChild(contents);
+                    }
+                });
                 starredIds.forEach(chatId => starredChatList.appendChild(buildChatItem(chatId)));
                 unstarredIds.forEach(chatId => chatList.appendChild(buildChatItem(chatId)));
             }
             function renderChatOnPage(chatId) {
                 chatHistory.innerHTML = "";
-                const messages = allChats[chatId].messages;
+                const isTemp = chatId === "temp";
+                const messages = isTemp ? tempChat.messages : allChats[chatId].messages;
 
-                const bgColor = allChats[chatId].lastColor || localStorage.getItem("moodRingDefaultColor") || "rgb(235, 177, 253)";
+                const bgColor = isTemp
+                    ? (tempChat.lastColor || localStorage.getItem("moodRingDefaultColor") || "rgb(235, 177, 253)")
+                    : (allChats[chatId].lastColor || localStorage.getItem("moodRingDefaultColor") || "rgb(235, 177, 253)");
                 document.body.style.backgroundColor = bgColor;
                 document.body.style.setProperty("--mood-color", bgColor);
 
-                messages.forEach(function(message) {
-                    const bubble = document.createElement("div");
-                    bubble.className = message.sender === "user" ? "user-message" : "ai-message";
-                    bubble.textContent = message.text;
-                    if (message.sender === "ai") {
+                messages.forEach(function(message, index) {
+                    if (message.sender === "user") {
+                        const wrapper = document.createElement("div");
+                        wrapper.className = "user-message-wrapper";
+                        const bubble = document.createElement("div");
+                        bubble.className = "user-message";
+                        bubble.textContent = message.text;
+                        wrapper.appendChild(bubble);
+                        wrapper.appendChild(createEditButton(index, message.text));
+                        chatHistory.appendChild(wrapper);
+                    } else {
+                        const bubble = document.createElement("div");
+                        bubble.className = "ai-message";
+                        bubble.textContent = message.text;
                         bubble.appendChild(createSpeakButton(message.text));
+                        chatHistory.appendChild(bubble);
                     }
-                    chatHistory.appendChild(bubble);
                 });
 
                 if (messages.length > 0) {
@@ -908,10 +1106,11 @@
                 } else {
                     document.body.classList.remove("chat-active");
                 }
-                infoToggle.textContent = emotionsEmojis[allChats[chatId].lastEmotion] || "🎭";
-                document.body.style.backgroundColor = allChats[chatId].lastColor || localStorage.getItem("moodRingDefaultColor") || "rgb(235, 177, 253)";
+                infoToggle.textContent = isTemp ? "👻" : (emotionsEmojis[allChats[chatId].lastEmotion] || "🎭");
+                document.body.style.backgroundColor = bgColor;
             }
             function switchToChat(chatId, shouldCloseSidebar = true) {
+                tempChat = null;
                 currentChatId = chatId;
                 localStorage.setItem("moodRingCurrentChatId", currentChatId);
                 renderChatOnPage(chatId);
@@ -921,29 +1120,58 @@
                 }
             }
             function startNewChat(shouldCloseSidebar = true) {
+                tempChat = null;
                 const newId = "chat_" + Date.now();
                 allChats[newId] = { title: "", messages: [] };
                 switchToChat(newId, shouldCloseSidebar);
             }
-            function addMessage(sender, text) {
-                const bubble = document.createElement("div");
-                bubble.className = sender === "user" ? "user-message" : "ai-message";
-                if (text == "typing........"){
-                    bubble.innerHTML='<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
-                }
-                else{
+            function startTemporaryChat() {
+                tempChat = { messages: [], lastColor: null };
+                currentChatId = "temp";
+                renderChatOnPage("temp");
+                renderChatList();
+                closeSidebar();
+            }
+           function addMessage(sender, text) {
+                const isTemp = currentChatId === "temp";
+                const messages = isTemp ? tempChat.messages : allChats[currentChatId].messages;
+
+                if (sender === "user") {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "user-message-wrapper";
+                    const bubble = document.createElement("div");
+                    bubble.className = "user-message";
                     bubble.textContent = text;
-                    if (sender === "ai") {
+                    wrapper.appendChild(bubble);
+
+                    messages.push({ sender: sender, text: text });
+                    wrapper.appendChild(createEditButton(messages.length - 1, text));
+                    chatHistory.appendChild(wrapper);
+
+                    if (!isTemp) {
+                        saveAllChats();
+                        renderChatList();
+                    }
+                    return bubble;
+                } else {
+                    const bubble = document.createElement("div");
+                    bubble.className = "ai-message";
+                    if (text === "typing........") {
+                        bubble.innerHTML = '<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>';
+                    } else {
+                        bubble.textContent = text;
                         bubble.appendChild(createSpeakButton(text));
                     }
-                }
-                chatHistory.appendChild(bubble);
+                    chatHistory.appendChild(bubble);
 
-                const chat = allChats[currentChatId];
-                chat.messages.push({ sender: sender, text: text });
-                saveAllChats();
-                renderChatList();
-                return bubble;
+                    messages.push({ sender: sender, text: text });
+
+                    if (!isTemp) {
+                        saveAllChats();
+                        renderChatList();
+                    }
+                    return bubble;
+                }
             }
             async function sendMessage() {
                 const textToAnalyze = JournalInput.value;
@@ -951,26 +1179,37 @@
                 if (textToAnalyze.trim() === "") return;
                 if (JournalInput.disabled) return;
                 JournalInput.disabled = true;
+                sendBtn.style.display = "none";
+                stopBtn.style.display = "";
 
                 document.body.classList.add("chat-active");
                 JournalInput.value = "";
                 JournalInput.style.height = "auto";
+
+                const isTemp = currentChatId === "temp";
 
                 addMessage("user", textToAnalyze);
                 const aiBubble = addMessage("ai", "typing........");
 
                 window.scrollTo(0, document.body.scrollHeight);
 
+                currentAbortController = new AbortController();
+
                 try {
                     const response = await fetch("http://127.0.0.1:8000/analyze", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ text: textToAnalyze })
+                        body: JSON.stringify({ text: textToAnalyze }),
+                        signal: currentAbortController.signal
                     });
+
+                    const messages = isTemp ? tempChat.messages : allChats[currentChatId].messages;
+
                     if (!response.ok) {
-                        aiBubble.textContent = "Something went wrong on the server (error " + response.status + ").";
-                        JournalInput.disabled = false;
-                        JournalInput.focus();
+                        const errorMsg = "Something went wrong on the server (error " + response.status + ").";
+                        aiBubble.textContent = errorMsg;
+                        messages[messages.length - 1].text = errorMsg;
+                        if (!isTemp) saveAllChats();
                         return;
                     }
 
@@ -978,17 +1217,18 @@
 
                     aiBubble.textContent = data.reply;
                     aiBubble.appendChild(createSpeakButton(data.reply));
-                    if (allChats[currentChatId].title === "") {
+                    if (!isTemp && allChats[currentChatId].title === "") {
                         allChats[currentChatId].title = data.title;
                     }
-                    allChats[currentChatId].messages[allChats[currentChatId].messages.length - 1].text = data.reply;
+                    messages[messages.length - 1].text = data.reply;
 
-                    const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
-                    moodLog.push({ emotion: data.emotion, confidence: data.confidence, timestamp: Date.now() });
-                    localStorage.setItem("moodRingMoodLog", JSON.stringify(moodLog));
-
-                    saveAllChats();
-                    renderChatList();
+                    if (!isTemp) {
+                        const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
+                        moodLog.push({ emotion: data.emotion, confidence: data.confidence, timestamp: Date.now() });
+                        localStorage.setItem("moodRingMoodLog", JSON.stringify(moodLog));
+                        saveAllChats();
+                        renderChatList();
+                    }
 
                     resultDisplay.textContent = data.emotion;
                     confidenceDisplay.textContent = (data.confidence * 100).toFixed(1) + "%";
@@ -996,18 +1236,32 @@
                     const newColor = emotionsColors[data.emotion] || "rgb(235, 177, 253)";
                     document.body.style.backgroundColor = newColor;
                     document.body.style.setProperty("--mood-color", newColor);
-                    allChats[currentChatId].lastColor = newColor;
-                    allChats[currentChatId].lastEmotion = data.emotion;
-                    infoToggle.textContent = emotionsEmojis[data.emotion] || "🎭";
 
-                    saveAllChats();
+                    if (isTemp) {
+                        tempChat.lastColor = newColor;
+                        infoToggle.textContent = "👻";
+                    } else {
+                        allChats[currentChatId].lastColor = newColor;
+                        allChats[currentChatId].lastEmotion = data.emotion;
+                        infoToggle.textContent = emotionsEmojis[data.emotion] || "🎭";
+                        saveAllChats();
+                    }
+
                     window.scrollTo(0, document.body.scrollHeight);
-                    JournalInput.disabled = false;
-                    JournalInput.focus();
                 } catch (error) {
-                    aiBubble.textContent = "Couldn't reach the server — check that your backend is running.";
-                    console.error("Network Error: ", error);
+                    const messages = isTemp ? tempChat.messages : allChats[currentChatId].messages;
+                    const errorMsg = error.name === "AbortError"
+                        ? "Response stopped."
+                        : "Couldn't reach the server — check that your backend is running.";
+                    aiBubble.textContent = errorMsg;
+                    messages[messages.length - 1].text = errorMsg;
+                    if (!isTemp) saveAllChats();
+                    console.error("Request error:", error);
+                } finally {
                     JournalInput.disabled = false;
+                    sendBtn.style.display = "";
+                    stopBtn.style.display = "none";
+                    currentAbortController = null;
                     JournalInput.focus();
                 }
             }
@@ -1050,10 +1304,26 @@
                 chatOptionsMenu.classList.remove("open");
                 menuTargetChatId = null;
             }
+            const commonUrduWords = ["main", "hoon", "hai", "tum", "aap", "ap", "bohot", "acha", "theek", "kya", "kyun", "nahi", "aaj", "kal"];
+            function looksLikeUrdu(text) {
+                const words = text.toLowerCase().split(/\s+/);
+                return words.some(word => commonUrduWords.includes(word));
+            }
+
             function speakText(text) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.pitch = parseFloat(localStorage.getItem("moodRingPitch") || "1");
+
+                if (looksLikeUrdu(text)) {
+                    const voices = window.speechSynthesis.getVoices();
+                    const urduVoice = voices.find(v => v.lang.startsWith("ur"));
+                    if (urduVoice) {
+                        utterance.voice = urduVoice;
+                        utterance.lang = urduVoice.lang;
+                    }
+                }
+
                 window.speechSynthesis.speak(utterance);
             }
             function createSpeakButton(text) {
@@ -1180,6 +1450,19 @@
             sessionStorage.setItem("moodRingSessionActive", "true");
 
             // ===== Event listeners =====
+            menuFolderBtn.addEventListener("click", () => {
+                const currentFolder = allChats[menuTargetChatId].folder || "";
+                const newFolder = prompt("Folder name (leave empty to remove from folder):", currentFolder);
+                if (newFolder !== null) {
+                    allChats[menuTargetChatId].folder = newFolder.trim() || null;
+                    saveAllChats();
+                    renderChatList();
+                }
+                closeChatOptionsMenu();
+            });
+
+            tempChatBtn.addEventListener("click", startTemporaryChat);
+            
             defaultColorPicker.addEventListener("input", () => {
                 const chosenColor = defaultColorPicker.value;
                 localStorage.setItem("moodRingDefaultColor", chosenColor);
@@ -1358,6 +1641,12 @@
 
             infoToggle.addEventListener("click", () => {
                 infoPanel.classList.toggle("open");
+            });
+
+            stopBtn.addEventListener("click", () => {
+                if (currentAbortController) {
+                    currentAbortController.abort();
+                }
             });
         </script>
     </body>

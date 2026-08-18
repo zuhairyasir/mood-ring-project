@@ -28,9 +28,13 @@ class ReplyService:
             f"If what they wrote suggests they might be in real danger or crisis (not just "
             f"having a hard day), gently and naturally suggest talking to someone they "
             f"trust or a crisis line, without being clinical about it.\n"
+            f"IMPORTANT: Reply in the SAME language/style the person wrote in. If they wrote "
+            f"in Roman Urdu (Urdu written in English letters) or mixed English-Urdu, reply "
+            f"naturally in Roman Urdu or mixed English-Urdu too, the way a real bilingual "
+            f"friend would text back — don't switch to pure English.\n"
         )
         response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content
@@ -42,7 +46,7 @@ class ReplyService:
             f"\"{text}\""
         )
         response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": title_prompt}]
         )
         return response.choices[0].message.content.strip()
