@@ -1,6 +1,16 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
+
+class JournalEntry(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)
+
+class MoodEntry(BaseModel):
+    emotion: str
+    confidence: float
+    timestamp: int
+
+class MoodLogPayload(BaseModel):
+    entries: List[MoodEntry]
 
 class ChatMessage(BaseModel):
     sender: str
@@ -15,19 +25,16 @@ class ChatData(BaseModel):
 class SearchPayload(BaseModel):
     chats: Dict[str, ChatData]
     query: str
-    
-class JournalEntry(BaseModel):
+
+class ExplainPayload(BaseModel):
     text: str
-
-class MoodEntry(BaseModel):
     emotion: str
-    confidence: float
-    timestamp: int
 
-class MoodLogPayload(BaseModel):
-    entries: List[MoodEntry]
+class SignupPayload(BaseModel):
+    username: str = Field(min_length=3, max_length=30)
+    email: str = Field(min_length=5, max_length=100)
+    password: str = Field(min_length=6, max_length=100)
 
-from pydantic import BaseModel, Field
-
-class JournalEntry(BaseModel):
-    text: str = Field(min_length=1, max_length=1000)
+class LoginPayload(BaseModel):
+    email: str
+    password: str

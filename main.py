@@ -16,6 +16,10 @@ from fastapi.responses import StreamingResponse
 from models import JournalEntry, MoodLogPayload
 from stats_service import StatsService
 import base64
+from fastapi import Header, HTTPException
+from auth_service import AuthService
+from models import JournalEntry, MoodLogPayload, SearchPayload, ExplainPayload, SignupPayload, LoginPayload
+
 
 load_dotenv()
 
@@ -32,6 +36,7 @@ stats_service = StatsService()
 emotion_service = EmotionService()
 reply_service = ReplyService()
 search_service = SearchService()
+auth_service = AuthService()
 
 @app.post("/stats")
 def get_stats(payload: MoodLogPayload):
@@ -85,3 +90,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+@app.post("/signup")
+def signup(payload: SignupPayload):
+    token, error = auth_service.signup(payload.username, payload.email, payload.password)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return {"token": token, "username": payload.username}
+
+@app.post("/login")
+def login(payload: LoginPayload):
+    token, error = auth_service.login(payload.email, payload.password)
+    if error:
+        raise HTTPException(status_code=401, detail=error)
+    username = auth_service.get_username_by_email(payload.email)
+    return {"token": token, "username": username}
+
+@app.get("/me")
+def get_me(authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not logged in")
+    token = authorization.replace("Bearer ", "")
+    user = auth_service.get_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    return user

@@ -200,6 +200,14 @@
                 font-size: 1rem;
             }
 
+            .send-btn:hover {
+                transform: translateY(-50%) scale(1.08);
+            }
+
+            .send-btn:active {
+                transform: translateY(-50%) scale(0.92);
+            }
+
             .stop-btn {
                 background-color: #b34a4a;
             }
@@ -226,6 +234,18 @@
             .mic-btn.recording {
                 background-color: #b34a4a;
                 animation: mic-pulse 1s infinite;
+            }
+
+            .mic-btn {
+                transition: transform 0.15s ease, background-color 0.2s ease;
+            }
+
+            .mic-btn:hover {
+                transform: translateY(-50%) scale(1.08);
+            }
+
+            .mic-btn:active {
+                transform: translateY(-50%) scale(0.92);
             }
 
             @keyframes mic-pulse {
@@ -312,6 +332,28 @@
                 background-color: #6a4a9a;
             }
 
+            .ai-message-wrapper {
+                display: flex;
+                align-items: flex-end;
+                gap: 8px;
+                align-self: flex-start;
+            }
+
+            .ai-message {
+                background-color: rgba(0, 0, 0, 0.3);
+                color: white;
+                padding: 12px 18px;
+                border-radius: 18px;
+                max-width: 480px;
+            }
+
+            .emotion-badge {
+                font-size: 0.8rem;
+                color: rgba(0,0,0,0.5);
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
             /* Chat history */
             #chatHistory {
                 width: 100%;
@@ -381,27 +423,47 @@
                 box-sizing: border-box;
                 transition: left 0.3s ease;
                 z-index: 21;
-                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             }
 
             .sidebar.open {
                 left: 0;
             }
 
-            .sidebar::-webkit-scrollbar {
-                width: 8px;
+            .sidebar-scroll {
+                flex: 1;
+                overflow-y: auto;
+                min-height: 0;
             }
-            .sidebar::-webkit-scrollbar-button {
-                display: none;
-                height: 0;
-                width: 0;
-            }
-            .sidebar::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .sidebar::-webkit-scrollbar-thumb {
+
+            .sidebar-scroll::-webkit-scrollbar { width: 8px; }
+            .sidebar-scroll::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+            .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+            .sidebar-scroll::-webkit-scrollbar-thumb {
                 background-color: rgba(255, 255, 255, 0.25);
                 border-radius: 4px;
+            }
+
+            #sidebarAuthBtn {
+                flex-shrink: 0;
+                border-top: 1px solid #333;
+                padding-top: 22px;
+            }
+
+            .locked {
+                opacity: 0.5;
+                position: relative;
+            }
+
+            .locked::after {
+                content: "🔒";
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 0.85rem;
             }
 
             .search-wrapper {
@@ -450,6 +512,32 @@
                 margin-bottom: 24px;
             }
 
+            .sidebar-label.collapsible {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+            }
+
+            .label-arrow {
+                font-size: 0.7rem;
+                transition: transform 0.2s ease;
+            }
+
+            .label-arrow.collapsed {
+                transform: rotate(-90deg);
+            }
+
+            .collapsible-content {
+                overflow: hidden;
+                max-height: 2000px;
+                transition: max-height 0.3s ease;
+            }
+
+            .collapsible-content.collapsed {
+                max-height: 0;
+            }
+
             .folder-header {
                 display: flex;
                 align-items: center;
@@ -467,6 +555,46 @@
 
             .folder-contents {
                 padding-left: 16px;
+            }
+
+            .folder-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+                padding: 12px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                margin-bottom: 4px;
+                font-size: 0.9rem;
+            }
+
+            .folder-header-name {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .folder-header-actions {
+                display: flex;
+                gap: 2px;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                flex-shrink: 0;
+            }
+
+            .folder-header:hover .folder-header-actions {
+                opacity: 1;
+            }
+
+            .folder-action-btn {
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+                font-size: 0.85rem;
+                padding: 2px 5px;
             }
 
             .sidebar-label {
@@ -500,6 +628,125 @@
                 font-size: 0.85rem;
                 color: #070707;
                 font-weight: 600;
+            }
+
+            h1.temp-notice {
+                font-size: 1.6rem;
+                font-weight: 500;
+                max-width: 700px;
+            }
+
+            .auth-overlay {
+                position: fixed;
+                inset: 0;
+                background: #1e1e2f;
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .auth-overlay.hidden {
+                display: none;
+            }
+
+           .auth-box {
+                width: 320px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                color: white;
+                background: #24243a;
+                padding: 32px 28px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.06);
+            }
+
+            .auth-box h2 {
+                text-align: center;
+                margin: 0 0 20px;
+                font-weight: 600;
+                letter-spacing: -0.02em;
+            }
+
+            .auth-field {
+                margin-bottom: 14px;
+            }
+
+            .auth-label {
+                display: block;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #999;
+                margin-bottom: 6px;
+                font-weight: 600;
+            }
+
+            .auth-box .search-input {
+                margin-bottom: 0;
+                background-color: #1a1a29;
+                border: 1px solid #3a3a52;
+                transition: border-color 0.2s ease, background-color 0.2s ease;
+            }
+
+            .auth-box .search-input:focus {
+                border-color: #8a8aff;
+                outline: none;
+                background-color: #20202f;
+            }
+
+            .auth-submit-btn {
+                width: 100%;
+                padding: 13px;
+                border-radius: 10px;
+                border: none;
+                background: linear-gradient(135deg, #6a4a9a, #4a4a6a);
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+                font-weight: 600;
+                margin: 16px 0 4px;
+                transition: transform 0.15s ease, filter 0.2s ease;
+            }
+
+            .auth-submit-btn:hover {
+                filter: brightness(1.1);
+                transform: scale(1.02);
+            }
+
+            .auth-submit-btn:active {
+                transform: scale(0.97);
+            }
+
+            .auth-toggle-text {
+                text-align: center;
+                font-size: 0.85rem;
+                color: #aaa;
+                margin: 12px 0 0;
+            }
+
+            .auth-error {
+                color: #ff6b6b;
+                font-size: 0.85rem;
+                min-height: 1.2em;
+                margin: 0;
+            }
+
+            .auth-toggle-text {
+                text-align: center;
+                font-size: 0.85rem;
+                color: #ccc;
+            }
+
+            .auth-link-btn {
+                background: none;
+                border: none;
+                color: #8a8aff;
+                cursor: pointer;
+                text-decoration: underline;
+                font-size: 0.85rem;
             }
 
             .chat-list-item {
@@ -575,11 +822,15 @@
                 background-color: rgba(255,80,80,0.2);
             }
 
-            .settings-modal {
+            .settings-modal.stats-modal {
                 text-align: left;
                 min-width: 280px;
-                background: #1e1e2f; 
-                color: white;
+                background: #ffffff;
+                color: rgb(0, 0, 0);
+            }
+
+            #statsBtn {
+                color: #000000;
             }
 
             .pitch-row {
@@ -701,12 +952,11 @@
                 width: 400px;
                 height: 400px;
                 border-radius: 50%;
-                background: radial-gradient(circle, rgba(var(--blob-color), 0.55), transparent 70%);
+                background: radial-gradient(circle, rgba(var(--blob-color), 0.45), transparent 70%);
                 pointer-events: none;
                 transform: translate(-50%, -50%);
                 transition: left 0.15s ease-out, top 0.15s ease-out;
                 filter: blur(30px);
-                mix-blend-mode: overlay;
                 opacity: 1;
             }
 
@@ -742,7 +992,6 @@
             }
 
             .new-chat-btn:hover,
-            .send-btn:hover,
             .info-toggle:hover,
             .kebab-btn:hover,
             .search-clear-btn:hover,
@@ -751,7 +1000,6 @@
             }
 
             .new-chat-btn:active,
-            .send-btn:active,
             .info-toggle:active,
             .kebab-btn:active,
             .search-clear-btn:active,
@@ -766,29 +1014,84 @@
         </style>
     </head>
     <body>
+        <div id="authOverlay" class="auth-overlay">
+            <form id="authForm" class="auth-box" autocomplete="on">
+                <h2 id="authTitle">Log In</h2>
+
+                <div class="auth-field">
+                    <label for="authUsername" class="auth-label">Username</label>
+                    <input type="text" id="authUsername" class="search-input" placeholder="Username" autocomplete="username">
+                </div>
+
+                <div class="auth-field">
+                    <label for="authEmail" class="auth-label">Email</label>
+                    <input type="email" id="authEmail" class="search-input" placeholder="Email" autocomplete="email">
+                </div>
+
+                <div class="auth-field">
+                    <label for="authPassword" class="auth-label">Password</label>
+                    <input type="password" id="authPassword" class="search-input" placeholder="Password" autocomplete="current-password">
+                </div>
+
+               <div class="auth-field">
+                    <label for="authConfirmPassword" class="auth-label">Confirm Password</label>
+                    <input type="password" id="authConfirmPassword" class="search-input" placeholder="Confirm Password" autocomplete="new-password">
+                </div>
+
+                <p id="authError" class="auth-error"></p>
+                <button id="authSubmitBtn" type="button" class="auth-submit-btn">Log In</button>
+                <p class="auth-toggle-text">
+                    <span id="authToggleText">Don't have an account?</span>
+                    <button id="authToggleBtn" type="button" class="auth-link-btn">Sign Up</button>
+                </p>
+                <button id="continueGuestBtn" type="button" class="auth-link-btn" style="margin-top: 10px;">Continue as Guest →</button>
+            </form>
+        </div>
+
+        <div id="lockedOverlay" class="auth-overlay hidden">
+            <div class="auth-box">
+                <h2>This feature is locked</h2>
+                <p style="text-align:center; color:#ccc; font-size:0.9rem;">
+                    This option is locked for guests. Would you like to log in or create an account to access it?
+                </p>
+                <button id="lockedYesBtn" class="new-chat-btn">Log In / Sign Up</button>
+                <button id="lockedCancelBtn" class="auth-link-btn" style="margin-top: 10px;">Cancel</button>
+            </div>
+        </div>
+
         <div id="mouseBlob" class="mouse-blob"></div>
 
-        <button id="infoToggle" class="info-toggle">🎭</button>
+        <button id="authActionBtn" class="info-toggle">🔑</button>
+        <button id="tempChatToggleBtn" class="info-toggle" style="right: 75px;">👻</button>
 
-        <div id="sidebar" class="sidebar">
+       <div id="sidebar" class="sidebar">
             <div class="search-wrapper">
                 <input type="text" id="searchInput" class="search-input" placeholder="Search entries...">
                 <button id="searchClearBtn" class="search-clear-btn">✕</button>
             </div>
             <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
-            <button id="tempChatBtn" class="new-chat-btn">👻 Temporary Chat</button>
-            <p class="sidebar-label">Stats</p>
-            <button id="statsBtn" class="new-chat-btn">📊 Export Mood Stats</button>
+            <button id="settingsBtn" class="new-chat-btn">⚙️ Settings</button>
 
-           <button id="settingsBtn" class="new-chat-btn">⚙️ Settings</button>
+            <div class="sidebar-scroll">
+                <p class="sidebar-label collapsible" data-target="folderSection">Folders <span class="label-arrow">▾</span></p>
+                <div id="folderSection" class="collapsible-content">
+                    <div id="folderList" class="chat-list"></div>
+                </div>
 
-            <p class="sidebar-label">Starred</p>
-            <div id="starredChatList" class="chat-list"></div>
-            <p class="sidebar-label">Folders</p>
-            <div id="folderList" class="chat-list"></div>
-            <p class="sidebar-label">Chats</p>
-            <div id="chatList" class="chat-list"></div>
+                <p class="sidebar-label collapsible" data-target="starredSection">Starred <span class="label-arrow">▾</span></p>
+                <div id="starredSection" class="collapsible-content">
+                    <div id="starredChatList" class="chat-list"></div>
+                </div>
+
+                <p class="sidebar-label collapsible" data-target="chatsSection">Chats <span class="label-arrow">▾</span></p>
+                <div id="chatsSection" class="collapsible-content">
+                    <div id="chatList" class="chat-list"></div>
+                </div>
+            </div>
+
+            <button id="sidebarAuthBtn" class="new-chat-btn" style="margin-top: 10px;">🔑 Login / Sign Up</button>
         </div>
+
         <div id="statsModalOverlay" class="sidebar-overlay"></div>
        <div id="statsModal" class="stats-modal">
             <button id="statsModalClose" class="modal-close-btn">✕</button>
@@ -798,7 +1101,9 @@
         </div>
         <div id="settingsModalOverlay" class="sidebar-overlay"></div>
         <div id="settingsModal" class="stats-modal settings-modal">
+            <p class="sidebar-label">Stats</p>
             <button id="settingsModalClose" class="modal-close-btn">✕</button>
+            <button id="statsBtn" class="new-chat-btn" style="margin-bottom: 20px;">📊 Export Mood Stats</button>
             <p class="sidebar-label">Default Page</p>
             <div class="color-wheel-row">
                 <input type="color" id="defaultColorPicker" class="color-wheel-input" value="#ebb1fd">
@@ -825,11 +1130,6 @@
             <button id="menuRenameBtn" class="menu-item">📜 Rename</button>
             <button id="menuDeleteBtn" class="menu-item menu-item-danger">🧨 Delete</button>
         </div>
-
-        <div id="infoPanel" class="info-panel">
-            <p>Detected Emotion: <span id="resultDisplay">None</span></p>
-            <p>Confidence: <span id="confidenceDisplay">None</span></p>
-        </div>
         <h1>Hello, Tell me about your day</h1>
         <div class="chat-container" id="chatHistory"></div>
 
@@ -853,13 +1153,12 @@
        
         <script>
            // ===== element references =====
+            const authEmail = document.getElementById("authEmail");
+            const authConfirmPassword = document.getElementById("authConfirmPassword");
             const JournalInput=document.getElementById("JournalInput");
             const chatHistory = document.getElementById("chatHistory");
-            const infoToggle = document.getElementById("infoToggle");
-            const infoPanel = document.getElementById("infoPanel");
-            const resultDisplay = document.getElementById("resultDisplay");
-            const resetBtn = document.getElementById("resetBtn");
-            const confidenceDisplay = document.getElementById("confidenceDisplay");
+            const authActionBtn = document.getElementById("authActionBtn");
+            const sidebarAuthBtn = document.getElementById("sidebarAuthBtn");
             const sidebarToggle = document.getElementById("sidebarToggle");
             const sidebarOverlay = document.getElementById("sidebarOverlay");
             const sidebar = document.getElementById("sidebar");
@@ -895,9 +1194,21 @@
             const pitchSlider = document.getElementById("pitchSlider");
             const pitchValue = document.getElementById("pitchValue");
             const stopBtn = document.getElementById("stopBtn");
-            const tempChatBtn = document.getElementById("tempChatBtn");
+            const tempChatBtn = document.getElementById("tempChatToggleBtn");
             const menuFolderBtn = document.getElementById("menuFolderBtn");
             const folderList = document.getElementById("folderList");
+            const authOverlay = document.getElementById("authOverlay");
+            const authTitle = document.getElementById("authTitle");
+            const authUsername = document.getElementById("authUsername");
+            const authPassword = document.getElementById("authPassword");
+            const authError = document.getElementById("authError");
+            const authSubmitBtn = document.getElementById("authSubmitBtn");
+            const authToggleText = document.getElementById("authToggleText");
+            const authToggleBtn = document.getElementById("authToggleBtn");
+            const continueGuestBtn = document.getElementById("continueGuestBtn");
+            const lockedOverlay = document.getElementById("lockedOverlay");
+            const lockedYesBtn = document.getElementById("lockedYesBtn");
+            const lockedCancelBtn = document.getElementById("lockedCancelBtn");
 
             // ===== Constant data =====
             const emotionsColors = {
@@ -933,8 +1244,76 @@
             let currentAbortController = null;
             let tempChat = null;
             let expandedFolders = new Set();
+            let authMode = "login";
+            let loggedInUsername = null;
 
             // ===== Functions =====
+           function openAuthPopup() {
+                if (loggedInUsername) {
+                    authTitle.textContent = "Log Out?";
+                    authUsername.parentElement.style.display = "none";
+                    authEmail.parentElement.style.display = "none";
+                    authPassword.parentElement.style.display = "none";
+                    authConfirmPassword.parentElement.style.display = "none";
+                    authError.textContent = "";
+                    authSubmitBtn.textContent = "Log Out";
+                    authToggleText.style.display = "none";
+                    authToggleBtn.style.display = "none";
+                    continueGuestBtn.textContent = "Cancel";
+                } else {
+                    authToggleText.style.display = "";
+                    authToggleBtn.style.display = "";
+                    continueGuestBtn.textContent = "Continue as Guest →";
+                    setAuthMode(authMode);
+                }
+                authOverlay.classList.remove("hidden");
+            }
+           function requireLogin() {
+                if (loggedInUsername) {
+                    return true;
+                }
+                lockedOverlay.classList.remove("hidden");
+                return false;
+            }
+            function setAuthMode(mode) {
+                authMode = mode;
+                authError.textContent = "";
+                authUsername.value = "";
+                authEmail.value = "";
+                authPassword.value = "";
+                authConfirmPassword.value = "";
+
+                if (mode === "login") {
+                    authTitle.textContent = "Log In";
+                    authSubmitBtn.textContent = "Log In";
+                    authToggleText.textContent = "Don't have an account?";
+                    authToggleBtn.textContent = "Sign Up";
+                    authUsername.parentElement.style.display = "none";
+                    authEmail.parentElement.style.display = "";
+                    authPassword.parentElement.style.display = "";   // ← ADD THIS
+                    authConfirmPassword.parentElement.style.display = "none";
+                    authPassword.setAttribute("autocomplete", "current-password");
+                } else {
+                    authTitle.textContent = "Sign Up";
+                    authSubmitBtn.textContent = "Sign Up";
+                    authToggleText.textContent = "Already have an account?";
+                    authToggleBtn.textContent = "Log In";
+                    authUsername.parentElement.style.display = "";
+                    authEmail.parentElement.style.display = "";
+                    authPassword.parentElement.style.display = "";   // ← ADD THIS
+                    authConfirmPassword.parentElement.style.display = "";
+                    authPassword.setAttribute("autocomplete", "new-password");
+                }
+            }
+
+           function updateGreeting() {
+                const h1 = document.querySelector("h1");
+                h1.classList.remove("temp-notice");
+                h1.textContent = loggedInUsername
+                    ? `Hello ${loggedInUsername}, Tell me about your day`
+                    : "Hello, Tell me about your day";
+            }
+
             function createEditButton(index, currentText) {
                 const editBtn = document.createElement("button");
                 editBtn.className = "edit-msg-btn";
@@ -1012,8 +1391,6 @@
                 const allIds = Object.keys(allChats).reverse().filter(id => allChats[id].messages.length > 0);
                 const visibleIds = currentSearchFilter ? allIds.filter(id => currentSearchFilter.includes(id)) : allIds;
 
-                // Foldered chats are pulled out first, so they never ALSO show
-                // up in Starred/Chats — each chat appears in exactly one place.
                 const folderedIds = visibleIds.filter(id => allChats[id].folder);
                 const unfolderedIds = visibleIds.filter(id => !allChats[id].folder);
 
@@ -1048,7 +1425,61 @@
 
                     const header = document.createElement("div");
                     header.className = "folder-header";
-                    header.textContent = (isExpanded ? "📂 " : "📁 ") + folderName;
+
+                    const nameSpan = document.createElement("span");
+                    nameSpan.className = "folder-header-name";
+                    nameSpan.textContent = (isExpanded ? "📂 " : "📁 ") + folderName;
+                    header.appendChild(nameSpan);
+
+                    const actions = document.createElement("div");
+                    actions.className = "folder-header-actions";
+
+                    const renameBtn = document.createElement("button");
+                    renameBtn.className = "folder-action-btn";
+                    renameBtn.textContent = "📜";
+                    renameBtn.addEventListener("click", (e) => {
+                        const newName = prompt("Rename folder:", folderName);
+                        if (newName !== null && newName.trim() !== "") {
+                            const trimmedName = newName.trim();
+                            Object.values(allChats).forEach(chat => {
+                                if (chat.folder === folderName) {
+                                    chat.folder = trimmedName;
+                                }
+                            });
+                            if (expandedFolders.has(folderName)) {
+                                expandedFolders.delete(folderName);
+                                expandedFolders.add(trimmedName);
+                            }
+                            saveAllChats();
+                            renderChatList();
+                        }
+                    });
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.className = "folder-action-btn";
+                    deleteBtn.textContent = "🧨";
+                    deleteBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        const sure = confirm(
+                            `Delete the "${folderName}" folder? Your chats will NOT be deleted — ` +
+                            `they'll just move back to your regular chat list.`
+                        );
+                        if (sure) {
+                            Object.values(allChats).forEach(chat => {
+                                if (chat.folder === folderName) {
+                                    chat.folder = null;
+                                }
+                            });
+                            expandedFolders.delete(folderName);
+                            saveAllChats();
+                            renderChatList();
+                        }
+                    });
+
+                    actions.appendChild(renameBtn);
+                    actions.appendChild(deleteBtn);
+                    header.appendChild(actions);
+
                     header.addEventListener("click", () => {
                         if (isExpanded) {
                             expandedFolders.delete(folderName);
@@ -1092,12 +1523,20 @@
                         wrapper.appendChild(bubble);
                         wrapper.appendChild(createEditButton(index, message.text));
                         chatHistory.appendChild(wrapper);
-                    } else {
+                   } else {
+                        const wrapper = document.createElement("div");
+                        wrapper.className = "ai-message-wrapper";
+
                         const bubble = document.createElement("div");
                         bubble.className = "ai-message";
                         bubble.textContent = message.text;
                         bubble.appendChild(createSpeakButton(message.text));
-                        chatHistory.appendChild(bubble);
+                        wrapper.appendChild(bubble);
+
+                        if (message.emotion) {
+                            wrapper.appendChild(createEmotionBadge(message.emotion, message.confidence));
+                        }
+                        chatHistory.appendChild(wrapper);
                     }
                 });
 
@@ -1106,7 +1545,6 @@
                 } else {
                     document.body.classList.remove("chat-active");
                 }
-                infoToggle.textContent = isTemp ? "👻" : (emotionsEmojis[allChats[chatId].lastEmotion] || "🎭");
                 document.body.style.backgroundColor = bgColor;
             }
             function switchToChat(chatId, shouldCloseSidebar = true) {
@@ -1114,6 +1552,7 @@
                 currentChatId = chatId;
                 localStorage.setItem("moodRingCurrentChatId", currentChatId);
                 renderChatOnPage(chatId);
+                updateGreeting(); 
                 renderChatList();
                 if (shouldCloseSidebar) {
                     closeSidebar();
@@ -1129,6 +1568,9 @@
                 tempChat = { messages: [], lastColor: null };
                 currentChatId = "temp";
                 renderChatOnPage("temp");
+                const h1 = document.querySelector("h1");
+                h1.textContent = "You're using a Temporary Chat — this conversation won't be saved. So what's on your mind?";
+                h1.classList.add("temp-notice");
                 renderChatList();
                 closeSidebar();
             }
@@ -1154,6 +1596,9 @@
                     }
                     return bubble;
                 } else {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "ai-message-wrapper";
+
                     const bubble = document.createElement("div");
                     bubble.className = "ai-message";
                     if (text === "typing........") {
@@ -1162,7 +1607,8 @@
                         bubble.textContent = text;
                         bubble.appendChild(createSpeakButton(text));
                     }
-                    chatHistory.appendChild(bubble);
+                    wrapper.appendChild(bubble);
+                    chatHistory.appendChild(wrapper);
 
                     messages.push({ sender: sender, text: text });
 
@@ -1173,6 +1619,32 @@
                     return bubble;
                 }
             }
+            async function checkAuth() {
+                const token = localStorage.getItem("moodRingAuthToken");
+                if (!token) return;  
+                try {
+                    const response = await fetch("http://127.0.0.1:8000/me", {
+                        headers: { "Authorization": "Bearer " + token }
+                    });
+                    if (!response.ok) {
+                        localStorage.removeItem("moodRingAuthToken");
+                        localStorage.removeItem("moodRingUsername");
+                        return;
+                    }
+                    const data = await response.json();
+                    loggedInUsername = data.username;
+                    authUsername.value = "";
+                    authEmail.value = "";
+                    authPassword.value = "";
+                    authConfirmPassword.value = "";
+                    authOverlay.classList.add("hidden");
+                    authOverlay.classList.add("hidden");
+                    updateGreeting();
+                } catch (error) {
+                    console.error("Auth check failed:", error);
+                }
+            }
+
             async function sendMessage() {
                 const textToAnalyze = JournalInput.value;
 
@@ -1217,10 +1689,13 @@
 
                     aiBubble.textContent = data.reply;
                     aiBubble.appendChild(createSpeakButton(data.reply));
+                    aiBubble.parentElement.appendChild(createEmotionBadge(data.emotion, data.confidence));
                     if (!isTemp && allChats[currentChatId].title === "") {
                         allChats[currentChatId].title = data.title;
                     }
                     messages[messages.length - 1].text = data.reply;
+                    messages[messages.length - 1].emotion = data.emotion;
+                    messages[messages.length - 1].confidence = data.confidence;
 
                     if (!isTemp) {
                         const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
@@ -1229,21 +1704,15 @@
                         saveAllChats();
                         renderChatList();
                     }
-
-                    resultDisplay.textContent = data.emotion;
-                    confidenceDisplay.textContent = (data.confidence * 100).toFixed(1) + "%";
-
                     const newColor = emotionsColors[data.emotion] || "rgb(235, 177, 253)";
                     document.body.style.backgroundColor = newColor;
                     document.body.style.setProperty("--mood-color", newColor);
 
                     if (isTemp) {
                         tempChat.lastColor = newColor;
-                        infoToggle.textContent = "👻";
                     } else {
                         allChats[currentChatId].lastColor = newColor;
                         allChats[currentChatId].lastEmotion = data.emotion;
-                        infoToggle.textContent = emotionsEmojis[data.emotion] || "🎭";
                         saveAllChats();
                     }
 
@@ -1264,6 +1733,13 @@
                     currentAbortController = null;
                     JournalInput.focus();
                 }
+            }
+            function createEmotionBadge(emotion, confidence) {
+                const badge = document.createElement("span");
+                badge.className = "emotion-badge";
+                const emoji = emotionsEmojis[emotion] || "";
+                badge.textContent = `${emoji} ${emotion} · ${(confidence * 100).toFixed(0)}% confident`;
+                return badge;
             }
             function openSidebar() {
                 sidebar.classList.add("open");
@@ -1309,6 +1785,21 @@
                 const words = text.toLowerCase().split(/\s+/);
                 return words.some(word => commonUrduWords.includes(word));
             }
+            function updateAuthButtons() {
+                if (loggedInUsername) {
+                    authActionBtn.textContent = "🚪";
+                    sidebarAuthBtn.textContent = "🚪 Log Out";
+                    sidebarAuthBtn.style.borderColor = "#b34a4a";
+                    sidebarAuthBtn.style.color = "#ff8080";
+                } else {
+                    authActionBtn.textContent = "🔑";
+                    sidebarAuthBtn.textContent = "🔑 Login / Sign Up";
+                    sidebarAuthBtn.style.borderColor = "#555";
+                    sidebarAuthBtn.style.color = "white";
+                }
+                authActionBtn.onclick = openAuthPopup;
+                sidebarAuthBtn.onclick = openAuthPopup;
+            }
 
             function speakText(text) {
                 window.speechSynthesis.cancel();
@@ -1347,8 +1838,28 @@
                 const b = parseInt(hex.slice(5, 7), 16);
                 return `${r}, ${g}, ${b}`;
             }
+            function applyLockState() {
+                const lockedButtons = [tempChatBtn, statsBtn, settingsBtn, menuFolderBtn];
+                lockedButtons.forEach(function(btn) {
+                    if (loggedInUsername) {
+                        btn.classList.remove("locked");
+                    } else {
+                        btn.classList.add("locked");
+                    }
+                });
+            }
 
             // ===== Speech setup =====
+            document.querySelectorAll(".sidebar-label.collapsible").forEach(function(label) {
+                const target = document.getElementById(label.dataset.target);
+                const arrow = label.querySelector(".label-arrow");
+
+                label.addEventListener("click", () => {
+                    target.classList.toggle("collapsed");
+                    arrow.classList.toggle("collapsed");
+                });
+            });
+
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (SpeechRecognition) {
                 recognition = new SpeechRecognition();
@@ -1451,6 +1962,7 @@
 
             // ===== Event listeners =====
             menuFolderBtn.addEventListener("click", () => {
+                if (!requireLogin()) return;
                 const currentFolder = allChats[menuTargetChatId].folder || "";
                 const newFolder = prompt("Folder name (leave empty to remove from folder):", currentFolder);
                 if (newFolder !== null) {
@@ -1461,7 +1973,14 @@
                 closeChatOptionsMenu();
             });
 
-            tempChatBtn.addEventListener("click", startTemporaryChat);
+            tempChatBtn.addEventListener("click", () => {
+                if (!requireLogin()) return;
+                if (currentChatId === "temp") {
+                    startNewChat();
+                } else {
+                    startTemporaryChat();
+                }
+            });
             
             defaultColorPicker.addEventListener("input", () => {
                 const chosenColor = defaultColorPicker.value;
@@ -1510,6 +2029,10 @@
             });
 
             statsBtn.addEventListener("click", async () => {
+                if (!requireLogin()) return;
+                settingsModal.classList.remove("open");
+                settingsModalOverlay.classList.remove("open");
+
                 const moodLog = JSON.parse(localStorage.getItem("moodRingMoodLog") || "[]");
 
                 if (moodLog.length === 0) {
@@ -1557,6 +2080,7 @@
             });
 
             settingsBtn.addEventListener("click", () => {
+                if (!requireLogin()) return;
                 settingsModal.classList.add("open");
                 settingsModalOverlay.classList.add("open");
                 closeSidebar();
@@ -1570,6 +2094,18 @@
             settingsModalClose.addEventListener("click", () => {
                 settingsModal.classList.remove("open");
                 settingsModalOverlay.classList.remove("open");
+            });
+
+            continueGuestBtn.addEventListener("click", () => {
+                if (loggedInUsername) {
+                    authOverlay.classList.add("hidden");
+                    return;
+                }
+                authOverlay.classList.add("hidden");
+                checkAuth().then(() => {
+                    applyLockState();
+                    updateAuthButtons();
+                });
             });
 
             menuStarBtn.addEventListener("click", () => {
@@ -1639,15 +2175,105 @@
 
             sendBtn.addEventListener("click", sendMessage);
 
-            infoToggle.addEventListener("click", () => {
-                infoPanel.classList.toggle("open");
-            });
+            
 
             stopBtn.addEventListener("click", () => {
                 if (currentAbortController) {
                     currentAbortController.abort();
                 }
             });
+
+            authToggleBtn.addEventListener("click", () => {
+                setAuthMode(authMode === "login" ? "signup" : "login");
+            });
+
+            lockedYesBtn.addEventListener("click", () => {
+            lockedOverlay.classList.add("hidden");
+                openAuthPopup(); 
+            });
+
+            lockedCancelBtn.addEventListener("click", () => {
+                lockedOverlay.classList.add("hidden");
+            });
+
+            authSubmitBtn.addEventListener("click", async () => {
+                if (loggedInUsername) {
+                    localStorage.removeItem("moodRingAuthToken");
+                    localStorage.removeItem("moodRingUsername");
+                    loggedInUsername = null;
+                    authOverlay.classList.add("hidden");
+                    document.querySelector("h1").textContent = "Hello, Tell me about your day";
+                    applyLockState();
+                    updateAuthButtons();
+                    return;
+                }
+
+               const password = authPassword.value;
+                if (authMode === "signup") {
+                    const username = authUsername.value.trim();
+                    const email = authEmail.value.trim();
+                    const confirmPassword = authConfirmPassword.value;
+
+                    if (!username || !email || !password || !confirmPassword) {
+                        authError.textContent = "Please fill in all fields.";
+                        return;
+                    }
+                    if (!/^\S+@\S+\.\S+$/.test(email)) {
+                        authError.textContent = "Please enter a valid email.";
+                        return;
+                    }
+                    if (password !== confirmPassword) {
+                        authError.textContent = "Passwords don't match.";
+                        return;
+                    }
+                } else {
+                    const email = authEmail.value.trim();
+                    if (!email || !password) {
+                        authError.textContent = "Please fill in both fields.";
+                        return;
+                    }
+                }
+
+                const endpoint = authMode === "login" ? "/login" : "/signup";
+                const payload = authMode === "signup"
+                    ? { username: authUsername.value.trim(), email: authEmail.value.trim(), password }
+                    : { email: authEmail.value.trim(), password };
+
+                try {
+                    const response = await fetch("http://127.0.0.1:8000" + endpoint, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        authError.textContent = data.detail || "Something went wrong.";
+                        return;
+                    }
+
+                    localStorage.setItem("moodRingAuthToken", data.token);
+                    localStorage.setItem("moodRingUsername", data.username);
+                    loggedInUsername = data.username;
+                    authOverlay.classList.add("hidden");
+                    updateGreeting();
+                    applyLockState();
+                    updateAuthButtons();
+                } catch (error) {
+                    authError.textContent = "Couldn't reach the server.";
+                    console.error(error);
+                }
+            });
+            if (sessionStorage.getItem("moodRingJustLoggedOut")) {
+                sessionStorage.removeItem("moodRingJustLoggedOut");
+                authOverlay.classList.add("hidden");
+                applyLockState();
+                updateAuthButtons();
+            } else {
+                checkAuth().then(() => {
+                    applyLockState();
+                    updateAuthButtons();
+                });
+            }
         </script>
     </body>
 </html>
