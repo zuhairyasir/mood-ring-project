@@ -1,8 +1,10 @@
 #  Mood-Ring Journal
 
-A full-stack, AI-powered digital diary. Write a journal entry, and the app detects your emotion, shifts the entire page's color to match your mood, and replies like a genuinely emotionally intelligent friend — not a scripted chatbot.
+A full-stack, experimental digital diary built to explore emotion classification, dynamic UI state management, and LLM prompt design.
 
-Built as a portfolio project for MITACS research internship applications, with a deliberate focus on real software engineering practice: modular architecture, version control, a hand-built data structure, and an evidence-based evaluation of the AI model's own limitations.
+Write a journal entry, and the app detects your emotion, shifts the entire page's color to match your mood, and replies like a genuinely emotionally intelligent friend and not a scripted chatbot.
+
+Project Purpose: This repository is an educational portfolio project. I built it to get hands on experience integrating local Hugging Face transformer models into asynchronous web frameworks, custom data structures (like Tries), and empirical NLP evaluation. It is not intended as a commercial therapy or mental health tool.
 
 ---
 
@@ -10,7 +12,7 @@ Built as a portfolio project for MITACS research internship applications, with a
 
 ### Core experience
 - **Real-time emotion detection** via a Hugging Face Transformers model, with confidence scoring
-- **Color-blended moods** — when two emotions score closely, their colors blend proportionally instead of picking one winner
+- **Dynamic mood reactive theme** — automatically shifts the page background color to mirror the dominant detected emotion of your entry
 - **AI-generated replies** via Groq's hosted LLM, prompted specifically to sound like a perceptive friend rather than a generic support bot
 - **"Why this emotion?"** — a second AI call gives its best-effort interpretation of what triggered a classification (framed honestly as an interpretation, not the model's actual internals)
 
@@ -19,14 +21,14 @@ Built as a portfolio project for MITACS research internship applications, with a
 - **Trie-based search** (a hand-built prefix tree) across all saved entries
 - **Temporary ("ghost") chats** that are never saved anywhere
 - **Edit a sent message** — truncates and resends the conversation from that point
-- **Stop an in-flight AI response** mid-generation
+- **Stop an in flight AI response** mid generation
 
 ### Voice
 - Speech-to-text journal entry via the browser's native Speech Recognition API
 - Text-to-speech playback of AI replies, with an adjustable pitch and a lightweight Roman Urdu voice heuristic
 
 ### Accounts
-- Email + password signup/login with bcrypt-hashed passwords and session tokens (SQLite-backed)
+- Email + password signup/login with bcrypt hashed passwords and session tokens (SQLite-backed)
 - **Guest mode** — anyone can chat normally without an account; extras (Settings, Temporary Chat, Folders, Mood Stats) unlock after signing in
 
 ### Analytics & Research
@@ -70,7 +72,7 @@ mood-ring-journal/
 
 ---
 
-## Setup & Installation
+## Setup and initialization
 
 ### 1. Clone and create a virtual environment
 ```bash
@@ -128,7 +130,7 @@ Run the benchmark suite yourself:
 ```bash
 python benchmark.py
 ```
-This measures classifier accuracy against a hand-labeled test set (with a per-emotion breakdown), plus latency for each pipeline stage, and writes the results to `EVALUATION.md`.
+This measures classifier accuracy against a hand labeled test set (with per emotion breakdown), plus latency for each pipeline stage, and writes the results to `EVALUATION.md`.
 
 **Key finding:** the emotion classifier performs well overall but shows a meaningful weakness on **implicit anger** — anger expressed through described behavior rather than explicit angry vocabulary. Full analysis, including specific misclassification examples, is in `EVALUATION.md`.
 
@@ -137,8 +139,8 @@ This measures classifier accuracy against a hand-labeled test set (with a per-em
 ## Known Limitations
 
 - Chat data, settings, and mood logs are stored in browser `localStorage`, not tied to user accounts server-side — logging in personalizes the experience but doesn't yet sync data across devices
-- The emotion classifier is English-trained; results on other languages (including Roman Urdu) are not validated
-- The "Why this emotion?" feature reflects a second AI model's interpretation, not the classifier's actual internal reasoning
+- The emotion classifier is English-trained; results on other languages are not validated
+- Can only detect one emotion at a time (No multiple emotions)
 - Free-tier API rate limits apply (Groq)
 
 ---
