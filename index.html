@@ -3,10 +3,21 @@
     <head>
         <meta charset="UTF-8">
         <title>Mood Ring Journal</title>
-        <style>
+       <style>
             :root {
-                 --mood-color: rgb(235, 177, 253);
-                 --blob-color: 255, 255, 255;
+                --mood-color: rgb(235, 177, 253);
+                --blob-color: 255, 255, 255;
+
+                --ink: #16161c;
+                --ink-soft: #24242c;
+                --paper: #faf8f4;
+                --paper-dim: #eeece5;
+                --line: rgba(22, 22, 28, 0.12);
+                --line-dark: rgba(250, 248, 244, 0.12);
+                --brass: #b08968;
+                --brass-dark: #8a6a4e;
+                --ember: #b3503f;
+                --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
             }
 
             * {
@@ -17,7 +28,7 @@
             /* Mobile URL */
             @media (max-width: 600px) {
                 h1 {
-                    font-size: 1.8rem; 
+                    font-size: 1.6rem;
                 }
 
                 .sidebar {
@@ -45,7 +56,7 @@
             body {
                 transition: background-color 1s ease;
                 background-color: rgb(235, 177, 253);
-                color: black;
+                color: var(--ink);
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -60,13 +71,17 @@
             }
 
             h1 {
-                font-size: 2.5rem;
+                font-family: var(--font-display);
+                font-size: 2.3rem;
                 font-weight: 400;
+                letter-spacing: -0.01em;
                 margin-bottom: 2rem;
                 text-align: center;
+                line-height: 1.3;
                 transition: opacity 0.5s ease, height 0.5s ease, margin 0.5s ease;
                 opacity: 1;
                 height: auto;
+                padding: 0 24px;
             }
 
             body.chat-active h1 {
@@ -79,13 +94,13 @@
             /* Chat input */
             .chat-container {
                 width: 100%;
-                max-width: 700px;
+                max-width: 680px;
                 position: relative;
             }
 
             .chat-container:has(#JournalInput) {
                 width: 100%;
-                max-width: 700px;
+                max-width: 680px;
             }
 
             .input-bar {
@@ -94,7 +109,7 @@
                 width: 100%;
             }
 
-           body.chat-active .input-bar {
+        body.chat-active .input-bar {
                 position: fixed;
                 bottom: 0;
                 left: 0;
@@ -121,9 +136,9 @@
             .edit-msg-btn {
                 background: none;
                 border: none;
-                color: rgba(0,0,0,0.5);
+                color: rgba(0,0,0,0.45);
                 cursor: pointer;
-                font-size: 0.9rem;
+                font-size: 0.85rem;
                 padding: 2px 4px;
                 margin-top: 4px;
                 opacity: 0;
@@ -136,15 +151,15 @@
                 pointer-events: auto;
             }
             .edit-msg-btn:hover {
-                color: white;
+                color: var(--ink);
             }
 
             .edit-textarea {
                 width: 100%;
-                background: rgba(0,0,0,0.2);
-                border: 1px solid rgba(255,255,255,0.3);
-                border-radius: 10px;
-                color: white;
+                background: rgba(0,0,0,0.18);
+                border: 1px solid rgba(255,255,255,0.25);
+                border-radius: 8px;
+                color: #fff;
                 padding: 8px;
                 font-family: inherit;
                 font-size: inherit;
@@ -161,28 +176,32 @@
             .edit-action-btn {
                 background: none;
                 border: none;
-                color: white;
+                color: #fff;
                 cursor: pointer;
                 font-size: 0.9rem;
             }
 
             #JournalInput {
                 width: 100%;
-                padding: 20px 25px;
-                font-size: 1.1rem;
-                border-radius: 30px;
-                border: 1px solid #444;
-                background-color: #2d2d3f;
-                color: white;
+                padding: 18px 90px 18px 22px;
+                font-size: 1.02rem;
+                border-radius: 14px;
+                border: 1px solid var(--line-dark);
+                background-color: var(--ink-soft);
+                color: #f2f1ec;
                 outline: none;
-                transition: border 0.3s;
+                transition: border 0.2s ease;
                 resize: none;
                 overflow-y: hidden;
                 line-height: 1.5;
             }
 
+            #JournalInput::placeholder {
+                color: #8b8a86;
+            }
+
             #JournalInput:focus {
-                border: 1px solid #888;
+                border: 1px solid var(--brass);
             }
 
             .send-btn {
@@ -192,28 +211,27 @@
                 transform: translateY(-50%);
                 width: 36px;
                 height: 36px;
-                border-radius: 50%;
+                border-radius: 10px;
                 border: none;
-                background-color: #4a4a6a;
-                color: white;
+                background-color: var(--brass);
+                color: var(--ink);
                 cursor: pointer;
-                font-size: 1rem;
+                font-size: 0.95rem;
+                font-weight: 600;
             }
 
             .send-btn:hover {
-                transform: translateY(-50%) scale(1.08);
+                transform: translateY(-50%) scale(1.06);
+                background-color: var(--brass-dark);
             }
 
             .send-btn:active {
-                transform: translateY(-50%) scale(0.92);
+                transform: translateY(-50%) scale(0.94);
             }
 
             .stop-btn {
-                background-color: #b34a4a;
-            }
-
-            #JournalInput {
-                padding-right: 90px; 
+                background-color: var(--ember);
+                color: #fff;
             }
 
             .mic-btn {
@@ -223,16 +241,18 @@
                 transform: translateY(-50%);
                 width: 36px;
                 height: 36px;
-                border-radius: 50%;
-                border: none;
-                background-color: #4a4a6a;
-                color: white;
+                border-radius: 10px;
+                border: 1px solid var(--line-dark);
+                background-color: transparent;
+                color: #d8d6cf;
                 cursor: pointer;
-                font-size: 1rem;
+                font-size: 0.95rem;
             }
 
             .mic-btn.recording {
-                background-color: #b34a4a;
+                background-color: var(--ember);
+                border-color: var(--ember);
+                color: #fff;
                 animation: mic-pulse 1s infinite;
             }
 
@@ -241,16 +261,16 @@
             }
 
             .mic-btn:hover {
-                transform: translateY(-50%) scale(1.08);
+                transform: translateY(-50%) scale(1.06);
             }
 
             .mic-btn:active {
-                transform: translateY(-50%) scale(0.92);
+                transform: translateY(-50%) scale(0.94);
             }
 
             @keyframes mic-pulse {
                 0%, 100% { transform: translateY(-50%) scale(1); }
-                50% { transform: translateY(-50%) scale(1.15); }
+                50% { transform: translateY(-50%) scale(1.12); }
             }
 
             .speak-btn {
@@ -258,14 +278,14 @@
                 margin-top: 8px;
                 background: none;
                 border: none;
-                color: rgba(255,255,255,0.7);
+                color: rgba(255,255,255,0.55);
                 cursor: pointer;
-                font-size: 0.9rem;
+                font-size: 0.85rem;
                 padding: 2px 4px;
             }
 
             .speak-btn:hover {
-                color: white;
+                color: #fff;
             }
 
             .voice-bar {
@@ -273,10 +293,11 @@
                 align-items: center;
                 gap: 12px;
                 width: 100%;
-                max-width: 700px;
-                padding: 15px 20px;
-                border-radius: 30px;
-                background-color: #2d2d3f;
+                max-width: 680px;
+                padding: 14px 18px;
+                border-radius: 14px;
+                background-color: var(--ink-soft);
+                border: 1px solid var(--line-dark);
             }
 
             .voice-bar.active {
@@ -295,7 +316,7 @@
             .voice-waveform span {
                 width: 3px;
                 height: 100%;
-                background-color: rgba(255,255,255,0.6);
+                background-color: var(--brass);
                 border-radius: 2px;
                 animation: waveform-bounce 1s infinite ease-in-out;
             }
@@ -319,17 +340,19 @@
             .voice-btn {
                 width: 36px;
                 height: 36px;
-                border-radius: 50%;
-                border: none;
-                background-color: #4a4a6a;
-                color: white;
+                border-radius: 10px;
+                border: 1px solid var(--line-dark);
+                background-color: transparent;
+                color: #f2f1ec;
                 cursor: pointer;
-                font-size: 1rem;
+                font-size: 0.95rem;
                 flex-shrink: 0;
             }
 
             .voice-send {
-                background-color: #6a4a9a;
+                background-color: var(--brass);
+                color: var(--ink);
+                border-color: var(--brass);
             }
 
             .ai-message-wrapper {
@@ -340,16 +363,16 @@
             }
 
             .ai-message {
-                background-color: rgba(0, 0, 0, 0.3);
-                color: white;
+                background-color: rgba(22, 22, 28, 0.72);
+                color: #f2f1ec;
                 padding: 12px 18px;
-                border-radius: 18px;
+                border-radius: 4px 14px 14px 14px;
                 max-width: 480px;
             }
 
             .emotion-badge {
-                font-size: 0.8rem;
-                color: rgba(0,0,0,0.5);
+                font-size: 0.75rem;
+                color: rgba(0,0,0,0.45);
                 white-space: nowrap;
                 flex-shrink: 0;
             }
@@ -357,7 +380,7 @@
             /* Chat history */
             #chatHistory {
                 width: 100%;
-                max-width: 700px;
+                max-width: 680px;
                 display: flex;
                 flex-direction: column;
                 gap: 15px;
@@ -365,22 +388,18 @@
             }
 
             body.chat-active #chatHistory {
-                 margin-top: 100px; 
+                margin-top: 100px;
             }
 
             .user-message {
-                background-color: #4a4a6a;
-                color: white;
+                background-color: var(--ink);
+                color: #f2f1ec;
                 padding: 12px 18px;
-                border-radius: 18px;
+                border-radius: 14px 4px 14px 14px;
             }
 
             .ai-message {
                 align-self: flex-start;
-                background-color: rgba(0, 0, 0, 0.3);
-                color: white;
-                padding: 12px 18px;
-                border-radius: 18px;
                 max-width: 80%;
             }
 
@@ -399,7 +418,7 @@
             .sidebar-overlay {
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.4);
+                background: rgba(10,10,12,0.5);
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.3s ease;
@@ -417,8 +436,8 @@
                 left: -280px;
                 width: 260px;
                 height: 100vh;
-                background-color: #1e1e2f;
-                color: white;
+                background-color: var(--ink);
+                color: #f2f1ec;
                 padding: 20px 15px;
                 box-sizing: border-box;
                 transition: left 0.3s ease;
@@ -426,6 +445,7 @@
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
+                border-right: 1px solid var(--line-dark);
             }
 
             .sidebar.open {
@@ -442,18 +462,18 @@
             .sidebar-scroll::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
             .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
             .sidebar-scroll::-webkit-scrollbar-thumb {
-                background-color: rgba(255, 255, 255, 0.25);
+                background-color: rgba(255, 255, 255, 0.15);
                 border-radius: 4px;
             }
 
             #sidebarAuthBtn {
                 flex-shrink: 0;
-                border-top: 1px solid #333;
+                border-top: 1px solid var(--line-dark);
                 padding-top: 22px;
             }
 
             .locked {
-                opacity: 0.5;
+                opacity: 0.45;
                 position: relative;
             }
 
@@ -463,7 +483,7 @@
                 right: 12px;
                 top: 50%;
                 transform: translateY(-50%);
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
 
             .search-wrapper {
@@ -474,12 +494,16 @@
             .search-input {
                 width: 100%;
                 padding: 10px 12px;
-                border-radius: 8px;
-                border: 1px solid #444;
-                background-color: #2d2d3f;
-                color: white;
+                border-radius: 10px;
+                border: 1px solid var(--line-dark);
+                background-color: var(--ink-soft);
+                color: #f2f1ec;
                 margin-bottom: 10px;
                 font-size: 0.9rem;
+            }
+
+            .search-input::placeholder {
+                color: #8b8a86;
             }
 
             .search-wrapper .search-input {
@@ -494,22 +518,22 @@
                 transform: translateY(-50%);
                 background: none;
                 border: none;
-                color: #999;
+                color: #9a988f;
                 cursor: pointer;
-                font-size: 0.8rem;
+                font-size: 0.75rem;
                 padding: 4px;
             }
 
             .new-chat-btn {
                 width: 100%;
-                padding: 12px;
+                padding: 11px;
                 border-radius: 10px;
-                border: 1px solid #555;
+                border: 1px solid var(--line-dark);
                 background-color: transparent;
-                color: white;
+                color: #f2f1ec;
                 cursor: pointer;
-                font-size: 1rem;
-                margin-bottom: 24px;
+                font-size: 0.95rem;
+                margin-bottom: 20px;
             }
 
             .sidebar-label.collapsible {
@@ -520,8 +544,9 @@
             }
 
             .label-arrow {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
                 transition: transform 0.2s ease;
+                color: #8b8a86;
             }
 
             .label-arrow.collapsed {
@@ -541,32 +566,21 @@
             .folder-header {
                 display: flex;
                 align-items: center;
+                justify-content: space-between;
                 gap: 6px;
-                padding: 12px 12px;
+                padding: 10px 12px;
                 border-radius: 8px;
                 cursor: pointer;
                 margin-bottom: 4px;
-                font-size: 0.9rem;
+                font-size: 0.88rem;
             }
 
             .folder-header:hover {
-                background-color: rgba(255,255,255,0.1);
+                background-color: rgba(255,255,255,0.06);
             }
 
             .folder-contents {
                 padding-left: 16px;
-            }
-
-            .folder-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 6px;
-                padding: 12px 12px;
-                border-radius: 8px;
-                cursor: pointer;
-                margin-bottom: 4px;
-                font-size: 0.9rem;
             }
 
             .folder-header-name {
@@ -591,33 +605,32 @@
             .folder-action-btn {
                 background: none;
                 border: none;
-                color: white;
+                color: #d8d6cf;
                 cursor: pointer;
-                font-size: 0.85rem;
+                font-size: 0.8rem;
                 padding: 2px 5px;
             }
 
             .sidebar-label {
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                color: #888;
-                margin: 24px 0 10px 4px;
-                font-weight: 700;
+                font-size: 0.72rem;
+                letter-spacing: 0.03em;
+                color: #8b8a86;
+                margin: 22px 0 10px 4px;
+                font-weight: 600;
             }
 
             .color-wheel-row {
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                margin-bottom: 24px;
+                margin-bottom: 22px;
             }
 
             .color-wheel-input {
-                width: 34px;
-                height: 34px;
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
-                border: none;
+                border: 1px solid var(--line);
                 padding: 0;
                 cursor: pointer;
             }
@@ -626,20 +639,29 @@
 
             .color-wheel-text {
                 font-size: 0.85rem;
-                color: #070707;
-                font-weight: 600;
+                color: var(--ink);
+                font-weight: 500;
             }
 
             h1.temp-notice {
-                font-size: 1.6rem;
-                font-weight: 500;
-                max-width: 700px;
+                font-size: 1.5rem;
+                font-weight: 400;
+                max-width: 620px;
+            }
+
+            @keyframes onAutoFillStart {
+                from { opacity: 1; }
+                to { opacity: 1; }
+            }
+
+            input:-webkit-autofill {
+                animation-name: onAutoFillStart;
             }
 
             .auth-overlay {
                 position: fixed;
                 inset: 0;
-                background: #1e1e2f;
+                background: var(--ink);
                 z-index: 100;
                 display: flex;
                 align-items: center;
@@ -650,24 +672,24 @@
                 display: none;
             }
 
-           .auth-box {
+        .auth-box {
                 width: 320px;
                 display: flex;
                 flex-direction: column;
                 gap: 4px;
-                color: white;
-                background: #24243a;
-                padding: 32px 28px;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-                border: 1px solid rgba(255,255,255,0.06);
+                color: #f2f1ec;
+                background: var(--ink-soft);
+                padding: 34px 30px;
+                border-radius: 16px;
+                border: 1px solid var(--line-dark);
             }
 
             .auth-box h2 {
+                font-family: var(--font-display);
+                font-weight: 400;
                 text-align: center;
-                margin: 0 0 20px;
-                font-weight: 600;
-                letter-spacing: -0.02em;
+                margin: 0 0 22px;
+                font-size: 1.7rem;
             }
 
             .auth-field {
@@ -676,74 +698,87 @@
 
             .auth-label {
                 display: block;
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                color: #999;
+                font-size: 0.72rem;
+                letter-spacing: 0.03em;
+                color: #9a988f;
                 margin-bottom: 6px;
                 font-weight: 600;
             }
 
             .auth-box .search-input {
                 margin-bottom: 0;
-                background-color: #1a1a29;
-                border: 1px solid #3a3a52;
-                transition: border-color 0.2s ease, background-color 0.2s ease;
+                background-color: var(--ink);
+                border: 1px solid var(--line-dark);
+                transition: border-color 0.2s ease;
             }
 
             .auth-box .search-input:focus {
-                border-color: #8a8aff;
+                border-color: var(--brass);
                 outline: none;
-                background-color: #20202f;
+            }
+
+            .password-wrapper {
+                position: relative;
+            }
+
+            .password-wrapper .search-input {
+                padding-right: 40px;
+            }
+
+            .password-toggle-btn {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 0.95rem;
+                color: #8b8a86;
+                padding: 4px;
             }
 
             .auth-submit-btn {
                 width: 100%;
-                padding: 13px;
+                padding: 12px;
                 border-radius: 10px;
-                border: none;
-                background: linear-gradient(135deg, #6a4a9a, #4a4a6a);
-                color: white;
+                border: 1px solid var(--brass);
+                background: var(--brass);
+                color: var(--ink);
                 cursor: pointer;
-                font-size: 1rem;
+                font-size: 0.95rem;
                 font-weight: 600;
-                margin: 16px 0 4px;
-                transition: transform 0.15s ease, filter 0.2s ease;
+                margin: 18px 0 4px;
+                transition: background-color 0.15s ease, transform 0.15s ease;
             }
 
             .auth-submit-btn:hover {
-                filter: brightness(1.1);
-                transform: scale(1.02);
+                background: var(--brass-dark);
+                border-color: var(--brass-dark);
             }
 
             .auth-submit-btn:active {
-                transform: scale(0.97);
+                transform: scale(0.98);
             }
 
             .auth-toggle-text {
                 text-align: center;
                 font-size: 0.85rem;
-                color: #aaa;
-                margin: 12px 0 0;
+                color: #9a988f;
+                margin: 14px 0 0;
             }
 
             .auth-error {
-                color: #ff6b6b;
-                font-size: 0.85rem;
+                color: #e5897a;
+                font-size: 0.82rem;
                 min-height: 1.2em;
                 margin: 0;
-            }
-
-            .auth-toggle-text {
-                text-align: center;
-                font-size: 0.85rem;
-                color: #ccc;
             }
 
             .auth-link-btn {
                 background: none;
                 border: none;
-                color: #8a8aff;
+                color: var(--brass);
                 cursor: pointer;
                 text-decoration: underline;
                 font-size: 0.85rem;
@@ -753,19 +788,19 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 12px 12px;
+                padding: 10px 12px;
                 border-radius: 8px;
                 cursor: pointer;
-                margin-bottom: 8px;
-                font-size: 0.9rem;
+                margin-bottom: 6px;
+                font-size: 0.88rem;
             }
 
             .chat-list-item:hover {
-                background-color: rgba(255,255,255,0.1);
+                background-color: rgba(255,255,255,0.06);
             }
 
             .chat-list-item.active {
-                background-color: rgba(255,255,255,0.2);
+                background-color: rgba(255,255,255,0.1);
             }
 
             .chat-title {
@@ -779,24 +814,24 @@
             .kebab-btn {
                 background: none;
                 border: none;
-                color: white;
+                color: #d8d6cf;
                 cursor: pointer;
-                font-size: 1.1rem;
+                font-size: 1.05rem;
                 padding: 2px 8px;
                 flex-shrink: 0;
             }
 
             .chat-options-menu {
                 position: fixed;
-                background-color: #2d2d3f;
-                border: 1px solid #444;
+                background-color: var(--ink-soft);
+                border: 1px solid var(--line-dark);
                 border-radius: 10px;
                 padding: 6px;
                 display: none;
                 flex-direction: column;
                 z-index: 30;
                 min-width: 140px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             }
 
             .chat-options-menu.open {
@@ -806,31 +841,31 @@
             .menu-item {
                 background: none;
                 border: none;
-                color: white;
+                color: #f2f1ec;
                 text-align: left;
                 padding: 8px 10px;
                 border-radius: 6px;
                 cursor: pointer;
-                font-size: 0.9rem;
+                font-size: 0.88rem;
             }
 
             .menu-item:hover {
-                background-color: rgba(255,255,255,0.1);
+                background-color: rgba(255,255,255,0.07);
             }
 
             .menu-item-danger:hover {
-                background-color: rgba(255,80,80,0.2);
+                background-color: rgba(179,80,63,0.2);
             }
 
             .settings-modal.stats-modal {
                 text-align: left;
                 min-width: 280px;
-                background: #ffffff;
-                color: rgb(0, 0, 0);
+                background: var(--paper);
+                color: var(--ink);
             }
 
             #statsBtn {
-                color: #000000;
+                color: var(--ink);
             }
 
             .pitch-row {
@@ -849,12 +884,12 @@
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                border: none;
-                background-color: rgba(0, 0, 0, 0.3);
-                font-size: 1.3rem;
+                width: 44px;
+                height: 44px;
+                border-radius: 10px;
+                border: 1px solid rgba(0,0,0,0.12);
+                background-color: rgba(22, 22, 28, 0.55);
+                font-size: 1.2rem;
                 cursor: pointer;
                 z-index: 10;
             }
@@ -863,11 +898,11 @@
                 position: fixed;
                 top: 75px;
                 right: 20px;
-                background-color: rgba(0, 0, 0, 0.85);
-                color: white;
+                background-color: var(--ink);
+                color: #f2f1ec;
                 padding: 15px 20px;
-                border-radius: 12px;
-                font-size: 0.9rem;
+                border-radius: 10px;
+                font-size: 0.88rem;
                 z-index: 10;
                 opacity: 0;
                 pointer-events: none;
@@ -886,13 +921,14 @@
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%) scale(0.95);
-                background: white;
+                background: var(--paper);
                 padding: 15px;
-                border-radius: 12px;
+                border-radius: 14px;
                 z-index: 31;
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.2s ease, transform 0.2s ease;
+                border: 1px solid var(--line);
             }
 
             .stats-modal.open {
@@ -912,28 +948,28 @@
                 position: absolute;
                 top: -12px;
                 right: -12px;
-                width: 32px;
-                height: 32px;
+                width: 30px;
+                height: 30px;
                 border-radius: 50%;
-                border: none;
-                background-color: #2d2d3f;
-                color: white;
+                border: 1px solid var(--line-dark);
+                background-color: var(--ink);
+                color: #f2f1ec;
                 cursor: pointer;
-                font-size: 1rem;
+                font-size: 0.9rem;
             }
 
             .stats-nav-btn {
                 position: absolute;
                 top: 50%;
                 transform: translateY(-50%);
-                width: 36px;
-                height: 36px;
+                width: 34px;
+                height: 34px;
                 border-radius: 50%;
-                border: none;
-                background-color: #2d2d3f;
-                color: white;
+                border: 1px solid var(--line-dark);
+                background-color: var(--ink);
+                color: #f2f1ec;
                 cursor: pointer;
-                font-size: 1.3rem;
+                font-size: 1.2rem;
             }
 
             .stats-nav-prev {
@@ -977,7 +1013,7 @@
                 background: transparent;
             }
             body::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.25);
+                background-color: rgba(0, 0, 0, 0.2);
                 border-radius: 4px;
             }
 
@@ -988,7 +1024,7 @@
             .kebab-btn,
             .search-clear-btn,
             .modal-close-btn {
-                transition: transform 0.15s ease, background-color 0.2s ease;
+                transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
             }
 
             .new-chat-btn:hover,
@@ -996,7 +1032,7 @@
             .kebab-btn:hover,
             .search-clear-btn:hover,
             .modal-close-btn:hover {
-                transform: scale(1.08);
+                border-color: var(--brass);
             }
 
             .new-chat-btn:active,
@@ -1004,7 +1040,7 @@
             .kebab-btn:active,
             .search-clear-btn:active,
             .modal-close-btn:active {
-                transform: scale(0.92);
+                transform: scale(0.95);
             }
 
             .menu-item,
@@ -1020,7 +1056,7 @@
 
                 <div class="auth-field">
                     <label for="authUsername" class="auth-label">Username</label>
-                    <input type="text" id="authUsername" class="search-input" placeholder="Username" autocomplete="username">
+                    <input type="text" id="authUsername" class="search-input" placeholder="Username" autocomplete="off" name="new-username-field">
                 </div>
 
                 <div class="auth-field">
@@ -1030,12 +1066,18 @@
 
                 <div class="auth-field">
                     <label for="authPassword" class="auth-label">Password</label>
-                    <input type="password" id="authPassword" class="search-input" placeholder="Password" autocomplete="current-password">
+                    <div class="password-wrapper">
+                        <input type="password" id="authPassword" class="search-input" placeholder="Password" autocomplete="new-password">
+                        <button type="button" id="togglePasswordBtn" class="password-toggle-btn" aria-label="Show password">👁</button>
+                    </div>
                 </div>
 
-               <div class="auth-field">
+                <div class="auth-field">
                     <label for="authConfirmPassword" class="auth-label">Confirm Password</label>
-                    <input type="password" id="authConfirmPassword" class="search-input" placeholder="Confirm Password" autocomplete="new-password">
+                    <div class="password-wrapper">
+                        <input type="password" id="authConfirmPassword" class="search-input" placeholder="Confirm Password" autocomplete="off">
+                        <button type="button" id="toggleConfirmPasswordBtn" class="password-toggle-btn" aria-label="Show password">👁</button>
+                    </div>
                 </div>
 
                 <p id="authError" class="auth-error"></p>
@@ -1251,11 +1293,12 @@
            function openAuthPopup() {
                 if (loggedInUsername) {
                     authTitle.textContent = "Log Out?";
-                    authUsername.parentElement.style.display = "none";
-                    authEmail.parentElement.style.display = "none";
-                    authPassword.parentElement.style.display = "none";
-                    authConfirmPassword.parentElement.style.display = "none";
-                    authError.textContent = "";
+                    authUsername.closest(".auth-field").style.display = "none";
+                    authEmail.closest(".auth-field").style.display = "none";
+                    authPassword.closest(".auth-field").style.display = "none";
+                    authConfirmPassword.closest(".auth-field").style.display = "none";
+                    authError.textContent = "Are you sure you want to log out?";
+                    authError.style.color = "#ccc";
                     authSubmitBtn.textContent = "Log Out";
                     authToggleText.style.display = "none";
                     authToggleBtn.style.display = "none";
@@ -1278,6 +1321,7 @@
             function setAuthMode(mode) {
                 authMode = mode;
                 authError.textContent = "";
+                authError.style.color = "";
                 authUsername.value = "";
                 authEmail.value = "";
                 authPassword.value = "";
@@ -1288,22 +1332,43 @@
                     authSubmitBtn.textContent = "Log In";
                     authToggleText.textContent = "Don't have an account?";
                     authToggleBtn.textContent = "Sign Up";
-                    authUsername.parentElement.style.display = "none";
-                    authEmail.parentElement.style.display = "";
-                    authPassword.parentElement.style.display = "";   // ← ADD THIS
-                    authConfirmPassword.parentElement.style.display = "none";
+                    authUsername.closest(".auth-field").style.display = "none";
+                    authEmail.closest(".auth-field").style.display = "";
+                    authPassword.closest(".auth-field").style.display = "";
+                    authConfirmPassword.closest(".auth-field").style.display = "none";
                     authPassword.setAttribute("autocomplete", "current-password");
                 } else {
                     authTitle.textContent = "Sign Up";
                     authSubmitBtn.textContent = "Sign Up";
                     authToggleText.textContent = "Already have an account?";
                     authToggleBtn.textContent = "Log In";
-                    authUsername.parentElement.style.display = "";
-                    authEmail.parentElement.style.display = "";
-                    authPassword.parentElement.style.display = "";   // ← ADD THIS
-                    authConfirmPassword.parentElement.style.display = "";
+                    authUsername.closest(".auth-field").style.display = "";
+                    authEmail.closest(".auth-field").style.display = "";
+                    authPassword.closest(".auth-field").style.display = "";
+                    authConfirmPassword.closest(".auth-field").style.display = "";
                     authPassword.setAttribute("autocomplete", "new-password");
                 }
+            }
+            function openAuthPopup() {
+                if (loggedInUsername) {
+                    authTitle.textContent = "Log Out?";
+                    authUsername.closest(".auth-field").style.display = "none";
+                    authEmail.closest(".auth-field").style.display = "none";
+                    authPassword.closest(".auth-field").style.display = "none"; 
+                    authConfirmPassword.closest(".auth-field").style.display = "none";
+                    authError.textContent = "Are you sure you want to log out?";
+                    authError.style.color = "#ccc";
+                    authSubmitBtn.textContent = "Log Out";
+                    authToggleText.style.display = "none";
+                    authToggleBtn.style.display = "none";
+                    continueGuestBtn.textContent = "Cancel";
+                } else {
+                    authToggleText.style.display = "";
+                    authToggleBtn.style.display = "";
+                    continueGuestBtn.textContent = "Continue as Guest →";
+                    setAuthMode(authMode);
+                }
+                authOverlay.classList.remove("hidden");
             }
 
            function updateGreeting() {
@@ -1376,12 +1441,15 @@
 
                 editInput.focus();
             }
+            function getChatsStorageKey() {
+                return loggedInUsername ? `moodRingChats_${loggedInUsername}` : "moodRingChats_guest";
+            }
             function loadAllChats(){
-                const saved = localStorage.getItem("moodRingChats");
+                const saved = localStorage.getItem(getChatsStorageKey());
                 allChats = saved ? JSON.parse(saved) : {};
             }
             function saveAllChats(){
-                localStorage.setItem("moodRingChats", JSON.stringify(allChats));
+                localStorage.setItem(getChatsStorageKey(), JSON.stringify(allChats));
             }
             function renderChatList() {
                 chatList.innerHTML = "";
@@ -1621,7 +1689,10 @@
             }
             async function checkAuth() {
                 const token = localStorage.getItem("moodRingAuthToken");
-                if (!token) return;  
+                if (!token) {
+                    authOverlay.classList.add("hidden");
+                    return;
+                }
                 try {
                     const response = await fetch("http://127.0.0.1:8000/me", {
                         headers: { "Authorization": "Bearer " + token }
@@ -1629,6 +1700,7 @@
                     if (!response.ok) {
                         localStorage.removeItem("moodRingAuthToken");
                         localStorage.removeItem("moodRingUsername");
+                        authOverlay.classList.add("hidden");
                         return;
                     }
                     const data = await response.json();
@@ -1638,9 +1710,9 @@
                     authPassword.value = "";
                     authConfirmPassword.value = "";
                     authOverlay.classList.add("hidden");
-                    authOverlay.classList.add("hidden");
                     updateGreeting();
                 } catch (error) {
+                    authOverlay.classList.add("hidden");
                     console.error("Auth check failed:", error);
                 }
             }
@@ -1946,21 +2018,53 @@
                 pitchValue.textContent = parseFloat(savedPitch).toFixed(1);
             }
 
-            loadAllChats();
-            cleanupEmptyChats();
-            const isRefresh = sessionStorage.getItem("moodRingSessionActive");
-            const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
+            (async function initApp() {
+                const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
+                const savedChats = localStorage.getItem("moodRingChats_" + (localStorage.getItem("moodRingUsername") || "guest"));
+                if (savedChats && lastActiveId) {
+                    try {
+                        const parsed = JSON.parse(savedChats);
+                        const savedColor = parsed[lastActiveId]?.lastColor || localStorage.getItem("moodRingDefaultColor");
+                        if (savedColor) {
+                            document.body.style.backgroundColor = savedColor;
+                            document.body.style.setProperty("--mood-color", savedColor);
+                        }
+                    } catch (e) {}
+                }
 
-            if (isRefresh && lastActiveId && allChats[lastActiveId]) {
-                currentChatId = lastActiveId;
-                renderChatOnPage(currentChatId);
-                renderChatList();
-            } else {
-                startNewChat();
-            }
-            sessionStorage.setItem("moodRingSessionActive", "true");
+                const isRefresh = sessionStorage.getItem("moodRingSessionActive");
+
+                if (isRefresh) {
+                    await checkAuth();
+                } else {
+                    authOverlay.classList.add("hidden");
+                    loggedInUsername = null;
+                }
+                applyLockState();
+                updateAuthButtons();
+
+                loadAllChats();
+                cleanupEmptyChats();
+                const lastActiveId2 = localStorage.getItem("moodRingCurrentChatId");
+
+                if (isRefresh && lastActiveId2 && allChats[lastActiveId2]) {
+                    currentChatId = lastActiveId2;
+                    renderChatOnPage(currentChatId);
+                    renderChatList();
+                } else {
+                    startNewChat();
+                }
+
+                sessionStorage.setItem("moodRingSessionActive", "true");
+            })();
 
             // ===== Event listeners =====
+            authPassword.addEventListener("animationstart", (e) => {
+                if (e.animationName === "onAutoFillStart") {
+                    authConfirmPassword.value = authPassword.value;
+                }
+            });
+
             menuFolderBtn.addEventListener("click", () => {
                 if (!requireLogin()) return;
                 const currentFolder = allChats[menuTargetChatId].folder || "";
@@ -2175,7 +2279,20 @@
 
             sendBtn.addEventListener("click", sendMessage);
 
-            
+            const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+            const toggleConfirmPasswordBtn = document.getElementById("toggleConfirmPasswordBtn");
+
+            togglePasswordBtn.addEventListener("click", () => {
+                const isHidden = authPassword.type === "password";
+                authPassword.type = isHidden ? "text" : "password";
+                togglePasswordBtn.textContent = isHidden ? "🙈" : "👁";
+            });
+
+            toggleConfirmPasswordBtn.addEventListener("click", () => {
+                const isHidden = authConfirmPassword.type === "password";
+                authConfirmPassword.type = isHidden ? "text" : "password";
+                toggleConfirmPasswordBtn.textContent = isHidden ? "🙈" : "👁";
+            });
 
             stopBtn.addEventListener("click", () => {
                 if (currentAbortController) {
@@ -2201,6 +2318,8 @@
                     localStorage.removeItem("moodRingAuthToken");
                     localStorage.removeItem("moodRingUsername");
                     loggedInUsername = null;
+                    loadAllChats();
+                    startNewChat();
                     authOverlay.classList.add("hidden");
                     document.querySelector("h1").textContent = "Hello, Tell me about your day";
                     applyLockState();
@@ -2254,6 +2373,8 @@
                     localStorage.setItem("moodRingAuthToken", data.token);
                     localStorage.setItem("moodRingUsername", data.username);
                     loggedInUsername = data.username;
+                    loadAllChats();
+                    startNewChat();
                     authOverlay.classList.add("hidden");
                     updateGreeting();
                     applyLockState();
@@ -2263,17 +2384,6 @@
                     console.error(error);
                 }
             });
-            if (sessionStorage.getItem("moodRingJustLoggedOut")) {
-                sessionStorage.removeItem("moodRingJustLoggedOut");
-                authOverlay.classList.add("hidden");
-                applyLockState();
-                updateAuthButtons();
-            } else {
-                checkAuth().then(() => {
-                    applyLockState();
-                    updateAuthButtons();
-                });
-            }
         </script>
     </body>
 </html>

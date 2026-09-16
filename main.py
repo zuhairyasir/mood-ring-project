@@ -1,9 +1,6 @@
 # python -m http.server 5500
 # http://127.0.0.1:5500
 # uvicorn main:app --reload
-# git add .
-# git commit -m "Initial commit: working Mood-Ring Journal with emotion detection, AI replies, chat history sidebar"
-# git log
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
