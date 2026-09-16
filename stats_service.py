@@ -1,28 +1,31 @@
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg") 
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import io
+
+EMOTION_ORDER = ["joy", "sadness", "anger", "fear", "disgust", "surprise", "neutral"]
 
 class StatsService:
     def generate_emotion_chart(self, entries):
         data = [{"emotion": e.emotion, "confidence": e.confidence, "timestamp": e.timestamp} for e in entries]
         df = pd.DataFrame(data)
 
-        emotion_counts = df["emotion"].value_counts()
+        emotion_counts = df["emotion"].value_counts().reindex(EMOTION_ORDER, fill_value=0)
 
         fig, ax = plt.subplots(figsize=(8, 5))
         emotion_counts.plot(kind="bar", color="#4a4a6a", ax=ax)
         ax.set_title("Emotion Frequency")
         ax.set_xlabel("Emotion")
         ax.set_ylabel("Number of Entries")
+        ax.set_ylim(bottom=0)
         plt.xticks(rotation=0)
         plt.tight_layout()
 
         buffer = io.BytesIO()
         fig.savefig(buffer, format="png")
-        plt.close(fig)  
-        buffer.seek(0)  
+        plt.close(fig)
+        buffer.seek(0)
         return buffer
 
     def generate_confidence_chart(self, entries):
