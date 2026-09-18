@@ -1,4 +1,4 @@
-#  Mood-Ring Journal
+# Mood-Ring Journal
 
 A full-stack, experimental digital diary built to explore emotion classification, dynamic UI state management, and LLM prompt design.
 
@@ -8,7 +8,15 @@ Project Purpose: This repository is an educational portfolio project. I built it
 
 ---
 
-##  Features
+## Demo
+
+
+
+A ~6 minute walkthrough: writing an entry, the background shifting with the detected emotion, the hands free voice conversation loop, folders and search, and the mood trends charts.
+
+---
+
+## Features
 
 ### Core experience
 - **Real-time emotion detection** via a Hugging Face Transformers model, with confidence scoring
@@ -18,27 +26,38 @@ Project Purpose: This repository is an educational portfolio project. I built it
 
 ### Conversations
 - Persistent, multi-chat sidebar with **star, rename, delete, and folders**
+- **Folder picker** with one-click chips for existing folders, plus a "remove from folder" shortcut
 - **Trie-based search** (a hand-built prefix tree) across all saved entries
 - **Temporary ("ghost") chats** that are never saved anywhere
 - **Edit a sent message** — truncates and resends the conversation from that point
 - **Stop an in flight AI response** mid generation
+- Custom in-app dialogs for every prompt/confirm/alert — no native browser popups anywhere
 
 ### Voice
 - Speech-to-text journal entry via the browser's native Speech Recognition API
-- Text-to-speech playback of AI replies, with an adjustable pitch and a lightweight Roman Urdu voice heuristic
+- **Hands-free conversation mode** — tap the mic once and the loop continues on its own: your speech is transcribed and sent, the reply is spoken aloud, and the mic reopens when it finishes. Cancel any time to drop back to typing
+- Text-to-speech playback of any reply, with adjustable pitch and a lightweight Roman Urdu voice heuristic
 
 ### Accounts
 - Email + password signup/login with bcrypt hashed passwords and session tokens (SQLite-backed)
-- **Guest mode** — anyone can chat normally without an account; extras (Settings, Temporary Chat, Folders, Mood Stats) unlock after signing in
+- **Guest mode** — anyone can chat normally without an account; extras (Customization, Temporary Chat, Folders, Mood Stats) unlock after signing in
+- Per-account local data — chats, mood logs, and the active conversation are namespaced by account email, so switching accounts (or logging out to guest) swaps in a separate history instead of sharing one
+- Password visibility toggles, autofill-aware signup, and a confirmation step before logging out
 
 ### Analytics & Research
 - **Mood Trends** dashboard — Pandas + Matplotlib charts (emotion frequency, confidence over time) generated server-side
 - **Empirical evaluation script** (`benchmark.py`) — measures real classifier accuracy (with a per-emotion breakdown) and pipeline latency, producing `EVALUATION.md`
 - Documented finding: the emotion classifier under-detects **implicit anger** (expressed through behavior rather than explicit vocabulary) — see `EVALUATION.md` for the full analysis
 
+### Interface
+- Editorial visual language: serif display type, a warm brass accent, and dark ink surfaces layered over the live mood color
+- A single token scale for color, radii, and elevation, so every surface derives from the same set of CSS variables
+- Cursor glow, mood-tinted composer gradient, and animated typing/waveform states
+- Keyboard focus rings on every control, `prefers-reduced-motion` support, and touch-friendly fallbacks where hover isn't available
+
 ---
 
-##  Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -65,6 +84,7 @@ mood-ring-journal/
 ├── benchmark.py              # Standalone accuracy/latency evaluation script
 ├── EVALUATION.md              # Generated report from benchmark.py
 ├── index.html                # Entire frontend (HTML/CSS/JS)
+├── docs/                      # Demo video and screenshots
 ├── requirements.txt           # Python dependencies
 ├── .env                        # API keys (not committed — see setup below)
 └── .gitignore
@@ -109,6 +129,8 @@ python -m http.server 5500
 ```
 Open `http://127.0.0.1:5500` in your browser.
 
+> Voice input uses the browser's Speech Recognition API, which is Chromium-only (Chrome, Edge). In other browsers the mic button hides itself and everything else works as normal.
+
 ---
 
 ## 🔌 Key API Endpoints
@@ -138,9 +160,10 @@ This measures classifier accuracy against a hand labeled test set (with per emot
 
 ## Known Limitations
 
-- Chat data, settings, and mood logs are stored in browser `localStorage`, not tied to user accounts server-side — logging in personalizes the experience but doesn't yet sync data across devices
+- Chat data, settings, and mood logs live in browser `localStorage`. They're namespaced per account, so accounts don't see each other's history on a shared browser, but nothing is stored server-side — so there's still no sync across devices, and clearing site data wipes everything
 - The emotion classifier is English-trained; results on other languages are not validated
 - Can only detect one emotion at a time (No multiple emotions)
+- Speech recognition and speech synthesis depend on the browser's built-in engines, so voice quality and language support vary by platform
 - Free-tier API rate limits apply (Groq)
 
 ---
