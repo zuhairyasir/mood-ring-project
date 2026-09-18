@@ -1385,7 +1385,7 @@
                 <button id="searchClearBtn" class="search-clear-btn">✕</button>
             </div>
             <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
-            <button id="settingsBtn" class="new-chat-btn">⚙️ Settings</button>
+            <button id="settingsBtn" class="new-chat-btn">⚙️ Customization</button>
 
             <div class="sidebar-scroll">
                 <p class="sidebar-label collapsible" data-target="folderSection">Folders <span class="label-arrow">▾</span></p>
@@ -1573,8 +1573,36 @@
             let expandedFolders = new Set();
             let authMode = "login";
             let loggedInUsername = null;
+            let voiceConversationActive = false;
 
             // ===== Functions =====
+            function speakReplyThenListen(text) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.pitch = parseFloat(localStorage.getItem("moodRingPitch") || "1");
+
+                if (looksLikeUrdu(text)) {
+                    const voices = window.speechSynthesis.getVoices();
+                    const urduVoice = voices.find(v => v.lang.startsWith("ur"));
+                    if (urduVoice) {
+                        utterance.voice = urduVoice;
+                        utterance.lang = urduVoice.lang;
+                    }
+                }
+
+                utterance.addEventListener("end", () => {
+                    if (voiceConversationActive && recognition && !isRecording) {
+                        recognition.start();
+                        isRecording = true;
+                        JournalInput.style.display = "none";
+                        sendBtn.style.display = "none";
+                        micBtn.style.display = "none";
+                        voiceBar.classList.add("active");
+                    }
+                });
+
+                window.speechSynthesis.speak(utterance);
+            }
            function requireLogin() {
                 if (loggedInUsername) {
                     return true;
@@ -1706,10 +1734,12 @@
                 editInput.focus();
             }
             function getChatsStorageKey() {
-                return loggedInUsername ? `moodRingChats_${loggedInUsername}` : "moodRingChats_guest";
+                const email = localStorage.getItem("moodRingEmail");
+                return email ? `moodRingChats_${email}` : "moodRingChats_guest";
             }
             function getMoodLogStorageKey() {
-                return loggedInUsername ? `moodRingMoodLog_${loggedInUsername}` : "moodRingMoodLog_guest";
+                const email = localStorage.getItem("moodRingEmail");
+                return email ? `moodRingMoodLog_${email}` : "moodRingMoodLog_guest";
             }
             function loadAllChats(){
                 const saved = localStorage.getItem(getChatsStorageKey());
@@ -1885,6 +1915,7 @@
             }
             function switchToChat(chatId, shouldCloseSidebar = true) {
                 tempChat = null;
+                voiceConversationActive = false;
                 currentChatId = chatId;
                 localStorage.setItem("moodRingCurrentChatId", currentChatId);
                 renderChatOnPage(chatId);
@@ -1902,6 +1933,7 @@
             }
             function startTemporaryChat() {
                 tempChat = { messages: [], lastColor: null };
+                voiceConversationActive = false;
                 currentChatId = "temp";
                 renderChatOnPage("temp");
                 const h1 = document.querySelector("h1");
@@ -1968,6 +2000,7 @@
                     if (!response.ok) {
                         localStorage.removeItem("moodRingAuthToken");
                         localStorage.removeItem("moodRingUsername");
+                        localStorage.removeItem("moodRingEmail");
                         authOverlay.classList.add("hidden");
                         return;
                     }
@@ -2036,7 +2069,9 @@
                     messages[messages.length - 1].text = data.reply;
                     messages[messages.length - 1].emotion = data.emotion;
                     messages[messages.length - 1].confidence = data.confidence;
-
+                    if (voiceConversationActive) {
+                        speakReplyThenListen(data.reply);
+                    }
                     if (!isTemp) {
                         const moodLog = JSON.parse(localStorage.getItem(getMoodLogStorageKey()) || "[]");
                         moodLog.push({ emotion: data.emotion, confidence: data.confidence, timestamp: Date.now() });
@@ -2336,8 +2371,9 @@
                     JournalInput.style.height = "auto";
                     JournalInput.style.height = JournalInput.scrollHeight + "px";
 
-                    if (pendingAutoSend) {
-                        pendingAutoSend = false;
+                    pendingAutoSend = false;
+
+                    if (voiceConversationActive && JournalInput.value.trim() !== "") {
                         sendMessage();
                     }
                 });
@@ -2355,6 +2391,7 @@
                 micBtn.addEventListener("click", () => {
                     if (isRecording) return;
 
+                    voiceConversationActive = true;
                     recognition.start();
                     isRecording = true;
 
@@ -2369,11 +2406,14 @@
                 });
 
                 voiceSendBtn.addEventListener("click", () => {
+                    voiceConversationActive = true;
                     pendingAutoSend = true;
                     recognition.stop();
                 });
 
                 voiceCancelBtn.addEventListener("click", () => {
+                    voiceConversationActive = false;
+                    window.speechSynthesis.cancel();
                     recognition.abort();
                 });
             } else {
@@ -2400,7 +2440,7 @@
 
             (async function initApp() {
                 const lastActiveId = localStorage.getItem("moodRingCurrentChatId");
-                const savedChats = localStorage.getItem("moodRingChats_" + (localStorage.getItem("moodRingUsername") || "guest"));
+                const savedChats = localStorage.getItem(getChatsStorageKey());
                 if (savedChats && lastActiveId) {
                     try {
                         const parsed = JSON.parse(savedChats);
@@ -2665,11 +2705,15 @@
             JournalInput.addEventListener("keydown", (event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
+                    voiceConversationActive = false;
                     sendMessage();
                 }
             });
 
-            sendBtn.addEventListener("click", sendMessage);
+            sendBtn.addEventListener("click", () => {
+                voiceConversationActive = false;
+                sendMessage();
+            });
 
             const togglePasswordBtn = document.getElementById("togglePasswordBtn");
             const toggleConfirmPasswordBtn = document.getElementById("toggleConfirmPasswordBtn");
@@ -2690,6 +2734,7 @@
                 if (currentAbortController) {
                     currentAbortController.abort();
                 }
+                voiceConversationActive = false;
             });
 
             authToggleBtn.addEventListener("click", () => {
@@ -2709,6 +2754,7 @@
                 if (loggedInUsername) {
                     localStorage.removeItem("moodRingAuthToken");
                     localStorage.removeItem("moodRingUsername");
+                    localStorage.removeItem("moodRingEmail");
                     loggedInUsername = null;
                     loadAllChats();
                     startNewChat();
@@ -2761,16 +2807,16 @@
                         authError.textContent = data.detail || "Something went wrong.";
                         return;
                     }
-
-                    localStorage.setItem("moodRingAuthToken", data.token);
-                    localStorage.setItem("moodRingUsername", data.username);
-                    loggedInUsername = data.username;
-                    loadAllChats();
-                    startNewChat();
-                    authOverlay.classList.add("hidden");
-                    updateGreeting();
-                    applyLockState();
-                    updateAuthButtons();
+                        localStorage.setItem("moodRingAuthToken", data.token);
+                        localStorage.setItem("moodRingUsername", data.username);
+                        localStorage.setItem("moodRingEmail", authEmail.value.trim());
+                        loggedInUsername = data.username;
+                        loadAllChats();
+                        startNewChat();
+                        authOverlay.classList.add("hidden");
+                        updateGreeting();
+                        applyLockState();
+                        updateAuthButtons();
                 } catch (error) {
                     authError.textContent = "Couldn't reach the server.";
                     console.error(error);
