@@ -12,9 +12,7 @@ Project Purpose: This repository is an educational portfolio project. I built it
 
 
 
-https://github.com/user-attachments/assets/97b6ba45-90ca-4245-aee7-e87f150b2afa
-
-
+https://github.com/user-attachments/assets/1a09417d-91fd-4a0e-b519-53d07749fdcf
 
 
 
