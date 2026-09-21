@@ -12,6 +12,10 @@ Project Purpose: This repository is an educational portfolio project. I built it
 
 
 
+https://github.com/user-attachments/assets/1a09417d-91fd-4a0e-b519-53d07749fdcf
+
+
+
 A ~6 minute walkthrough: writing an entry, the background shifting with the detected emotion, the hands free voice conversation loop, folders and search, and the mood trends charts.
 
 ---
