@@ -47,7 +47,18 @@ for text, expected in test_cases:
         correct += 1
         per_emotion[expected]["correct"] += 1
     else:
-        mistakes.append((text, expected, predicted, confidence))
+        alternatives = emotion_service.classify_with_alternatives(text)
+        # Where did the actual correct label rank, and how close was it to the top pick?
+        expected_rank = next(
+            (i + 1 for i, alt in enumerate(alternatives) if alt["label"] == expected),
+            None
+        )
+        expected_score = next(
+            (alt["score"] for alt in alternatives if alt["label"] == expected),
+            0.0
+        )
+        margin = confidence - expected_score  # how far ahead the wrong guess was
+        mistakes.append((text, expected, predicted, confidence, expected_rank, expected_score, margin))
 
 accuracy = correct / len(test_cases)
 
@@ -92,11 +103,21 @@ with open("EVALUATION.md", "w", encoding="utf-8") as f:
 
     if mistakes:
         f.write("### Misclassifications\n\n")
-        f.write("| Text | Expected | Predicted | Confidence |\n")
-        f.write("|---|---|---|---|\n")
-        for text, expected, predicted, confidence in mistakes:
-            f.write(f"| {text} | {expected} | {predicted} | {confidence:.1%} |\n")
+        f.write("| Text | Expected | Predicted | Confidence | Expected's Rank | Expected's Score | Margin |\n")
+        f.write("|---|---|---|---|---|---|---|\n")
+        for text, expected, predicted, confidence, expected_rank, expected_score, margin in mistakes:
+            f.write(
+                f"| {text} | {expected} | {predicted} | {confidence:.1%} | "
+                f"#{expected_rank} | {expected_score:.1%} | {margin:.1%} |\n"
+            )
         f.write("\n")
+        f.write(
+            "- **Rank** is where the true label landed among all 7 predicted emotions, "
+            "sorted by score (1 = top pick, would mean it wasn't actually a miss). "
+            "**Margin** is how far ahead the wrong top prediction was over the correct "
+            "answer — a small margin (e.g. under 10%) indicates a close call the model "
+            "was genuinely unsure about; a large margin indicates a confident, clean miss.\n\n"
+        )
 
     f.write("## Latency (10 runs for classifier, 5 runs for Groq calls)\n\n")
     f.write("| Stage | Mean (s) | Min (s) | Max (s) |\n")

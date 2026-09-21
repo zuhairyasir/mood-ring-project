@@ -1,8 +1,16 @@
-from groq import Groq
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+load_dotenv()
 
 class ReplyService:
     def __init__(self):
-        self.client = Groq()
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+        )
+        self.model = "openrouter/free"
+        self.app_url = os.environ.get("APP_URL", "http://127.0.0.1:5500")
 
     def generate_reply(self, text, emotion):
         prompt = (
@@ -33,11 +41,19 @@ class ReplyService:
             f"naturally in Roman Urdu or mixed English-Urdu too, the way a real bilingual "
             f"friend would text back — don't switch to pure English.\n"
         )
-        response = self.client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                extra_headers={
+                    "HTTP-Referer": self.app_url,
+                    "X-Title": "Mood Ring Journal",
+                },
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"OpenRouter reply generation failed: {e}")
+            return "I'm having a little trouble finding the words right now — mind trying again in a moment?"
 
     def generate_title(self, text):
         title_prompt = (
@@ -45,8 +61,16 @@ class ReplyService:
             f"3 to 5 words maximum, no punctuation, no quotation marks: "
             f"\"{text}\""
         )
-        response = self.client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[{"role": "user", "content": title_prompt}]
-        )
-        return response.choices[0].message.content.strip()
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": title_prompt}],
+                extra_headers={
+                    "HTTP-Referer": self.app_url,
+                    "X-Title": "Mood Ring Journal",
+                },
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"OpenRouter title generation failed: {e}")
+            return "Untitled entry"

@@ -21,7 +21,7 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 ### Core experience
 - **Real-time emotion detection** via a Hugging Face Transformers model, with confidence scoring
 - **Dynamic mood reactive theme** — automatically shifts the page background color to mirror the dominant detected emotion of your entry
-- **AI-generated replies** via Groq's hosted LLM, prompted specifically to sound like a perceptive friend rather than a generic support bot
+- **AI-generated replies** via a hosted LLM through OpenRouter, prompted specifically to sound like a perceptive friend rather than a generic support bot
 - **"Why this emotion?"** — a second AI call gives its best-effort interpretation of what triggered a classification (framed honestly as an interpretation, not the model's actual internals)
 
 ### Conversations
@@ -47,6 +47,8 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 ### Analytics & Research
 - **Mood Trends** dashboard — Pandas + Matplotlib charts (emotion frequency, confidence over time) generated server-side
 - **Empirical evaluation script** (`benchmark.py`) — measures real classifier accuracy (with a per-emotion breakdown) and pipeline latency, producing `EVALUATION.md`
+- **Misclassification diagnostics** — for every wrong prediction, the benchmark reports where the correct emotion actually ranked among all 7 candidates and by how much it lost, distinguishing a genuine close call from a confident, clean miss
+- A confidence floor on the live classifier falls back to "neutral" below a set threshold, so a low-confidence guess doesn't paint the whole page with false certainty
 - Documented finding: the emotion classifier under-detects **implicit anger** (expressed through behavior rather than explicit vocabulary) — see `EVALUATION.md` for the full analysis
 
 ### Interface
@@ -63,7 +65,7 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 |---|---|
 | Backend | Python, FastAPI, Uvicorn |
 | Emotion detection | Hugging Face Transformers (local model) |
-| AI replies | Groq API (hosted LLM) |
+| AI replies | OpenRouter (hosted LLM API, OpenAI-compatible) |
 | Accounts | SQLite, bcrypt |
 | Analytics | Pandas, Matplotlib |
 | Frontend | Vanilla JavaScript, HTML, CSS (no framework) |
@@ -77,7 +79,7 @@ mood-ring-journal/
 ├── main.py                # FastAPI app: routes and orchestration
 ├── models.py               # Pydantic request/response models
 ├── emotion_service.py       # EmotionService — Hugging Face classifier wrapper
-├── reply_service.py         # ReplyService — Groq prompt design and calls
+├── reply_service.py         # ReplyService — OpenRouter prompt design and calls
 ├── stats_service.py         # StatsService — Pandas/Matplotlib chart generation
 ├── search_service.py        # SearchService — Trie-based prefix search
 ├── auth_service.py          # AuthService — signup/login, sessions, bcrypt
@@ -112,9 +114,9 @@ pip install -r requirements.txt
 ### 3. Set up your API key
 Create a `.env` file in the project root:
 ```
-GROQ_API_KEY=your_key_here
+OPENROUTER_API_KEY=your_key_here
 ```
-Get a free key at [console.groq.com](https://console.groq.com).
+Get a free key at [openrouter.ai/keys](https://openrouter.ai/keys). Reply and title generation currently use OpenRouter's free-tier model routing — free model availability on OpenRouter shifts over time, so the `self.model` value in `reply_service.py` is worth checking periodically if replies start failing.
 
 ### 4. Run the backend
 ```bash
@@ -152,9 +154,9 @@ Run the benchmark suite yourself:
 ```bash
 python benchmark.py
 ```
-This measures classifier accuracy against a hand labeled test set (with per emotion breakdown), plus latency for each pipeline stage, and writes the results to `EVALUATION.md`.
+This measures classifier accuracy against a hand labeled test set (with per emotion breakdown), plus latency for each pipeline stage, and writes the results to `EVALUATION.md`. Every misclassification is also logged with the correct emotion's actual rank and score among all 7 candidates, so a near-miss (correct answer ranked 2nd, close score) can be told apart from a confident, clean miss.
 
-**Key finding:** the emotion classifier performs well overall but shows a meaningful weakness on **implicit anger** — anger expressed through described behavior rather than explicit angry vocabulary. Full analysis, including specific misclassification examples, is in `EVALUATION.md`.
+**Key finding:** the emotion classifier performs well overall but shows a meaningful weakness on **implicit anger** — anger expressed through described behavior rather than explicit angry vocabulary. Full analysis, including specific misclassification examples and their rank/margin breakdown, is in `EVALUATION.md`.
 
 ---
 
@@ -163,16 +165,18 @@ This measures classifier accuracy against a hand labeled test set (with per emot
 - Chat data, settings, and mood logs live in browser `localStorage`. They're namespaced per account, so accounts don't see each other's history on a shared browser, but nothing is stored server-side — so there's still no sync across devices, and clearing site data wipes everything
 - The emotion classifier is English-trained; results on other languages are not validated
 - Can only detect one emotion at a time (No multiple emotions)
+- The confidence-threshold fallback reduces false-certainty display but does not correct the underlying classification — a confidently wrong prediction above the threshold is still shown as-is
 - Speech recognition and speech synthesis depend on the browser's built-in engines, so voice quality and language support vary by platform
-- Free-tier API rate limits apply (Groq)
+- Free-tier model availability on OpenRouter changes without notice; a pinned model can be deprecated or moved to paid-only, which is why `reply_service.py` currently favors OpenRouter's auto-routing free model over a single pinned slug
 
 ---
 
 ## Possible Future Work
 
 - Migrate chat/settings storage from `localStorage` to per-user database records
-- Fine-tune the emotion classifier (e.g. via LoRA) specifically to address the implicit-anger weakness identified in evaluation
+- Fine-tune the emotion classifier (e.g. via LoRA), or evaluate a swap to a more fine-grained model (e.g. one trained on GoEmotions), specifically to address the implicit-anger weakness identified in evaluation
 - Expand the benchmark test set for more statistically robust accuracy claims
+- Add automatic fallback to a secondary pinned model if the primary OpenRouter model call fails, instead of surfacing a generic error message
 
 ---
 
