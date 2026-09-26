@@ -20,6 +20,14 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 
 ---
 
+## UI refresh — journal-oriented sidebar & redesigned login/sign up
+
+
+
+Reworked the login/sign up page's look, and updated the sidebar so it reads as a journal rather than a chat interface.
+
+---
+
 ## Features
 
 ### Core experience

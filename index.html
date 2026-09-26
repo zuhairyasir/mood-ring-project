@@ -1065,48 +1065,150 @@
             .auth-overlay {
                 position: fixed;
                 inset: 0;
-                background: var(--ink);
+                background: rgba(10, 10, 14, 0.75);
                 z-index: 100;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 padding: 24px;
             }
-            
+
             .auth-overlay.hidden {
                 display: none;
             }
-            
-            .auth-box {
-                width: 340px;
-                max-width: 100%;
+
+            .auth-shell {
+                display: flex;
+                width: 100%;
+                max-width: 760px;
+                min-height: 520px;
+                background: var(--ink);
+                border-radius: var(--r-xl);
+                overflow: hidden;
+                box-shadow: var(--shadow-modal);
+                border: 1px solid var(--line-dark);
+            }
+
+            .auth-visual {
+                flex: 0 0 44%;
+                position: relative;
+                overflow: hidden;
+                padding: 32px;
                 display: flex;
                 flex-direction: column;
-                color: var(--on-dark);
-                background: var(--ink-soft);
-                padding: 34px 30px 30px;
-                border-radius: var(--r-xl);
-                border: 1px solid var(--line-dark);
-                box-shadow: var(--shadow-modal);
+                justify-content: space-between;
+                background:
+                    radial-gradient(circle at 25% 15%, rgba(176,137,104,0.25), transparent 55%),
+                    radial-gradient(circle at 75% 85%, rgba(139,30,30,0.2), transparent 50%),
+                    linear-gradient(160deg, #1c1420 0%, #16161c 55%, #10121a 100%);
             }
-            
-            .auth-box h2 {
+
+            .auth-hero-title {
                 font-family: var(--font-display);
+                font-size: 2rem;
                 font-weight: 400;
-                font-size: 1.65rem;
-                letter-spacing: -0.015em;
-                text-align: center;
-                margin: 0 0 24px;
+                letter-spacing: -0.01em;
+                color: var(--on-dark);
+                margin: 0 0 4px;
             }
-            
+
+            .auth-hero-tagline {
+                font-size: 0.85rem;
+                color: var(--on-dark-soft);
+                margin: 0;
+            }
+
+            .auth-sparkle {
+                position: absolute;
+                font-size: 0.9rem;
+                opacity: 0.7;
+                animation: sparkle-twinkle 2.4s ease-in-out infinite;
+            }
+            .auth-sparkle-1 { top: 14%; right: 18%; animation-delay: 0s; }
+            .auth-sparkle-2 { top: 30%; right: 8%; font-size: 0.6rem; animation-delay: 0.8s; }
+            .auth-sparkle-3 { bottom: 20%; left: 10%; animation-delay: 1.5s; }
+
+            @keyframes sparkle-twinkle {
+                0%, 100% { opacity: 0.25; transform: scale(0.85); }
+                50%      { opacity: 0.9;  transform: scale(1.1); }
+            }
+
+            .auth-orbit {
+                position: relative;
+                height: 160px;
+                margin: 8px 0;
+            }
+
+            .auth-orb {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.3rem;
+                background: rgba(255,255,255,0.06);
+                border: 1px solid var(--clr);
+                box-shadow: 0 0 18px -2px var(--clr);
+                transform:
+                    translate(-50%, -50%)
+                    rotate(calc(var(--i) * 72deg))
+                    translateX(78px)
+                    rotate(calc(var(--i) * -72deg));
+                animation: orb-float 5s ease-in-out infinite;
+                animation-delay: calc(var(--i) * 0.3s);
+            }
+
+            @keyframes orb-float {
+                0%, 100% { margin-top: 0px; }
+                50%      { margin-top: -8px; }
+            }
+
+            .auth-tagline {
+                font-family: var(--font-display);
+                font-size: 1.3rem;
+                line-height: 1.35;
+                color: var(--on-dark);
+                margin: 0;
+                position: relative;
+                z-index: 1;
+            }
+
+            .auth-logo {
+                font-family: var(--font-display);
+                font-size: 1.15rem;
+                letter-spacing: -0.01em;
+                color: var(--on-dark);
+            }
+
+            .auth-tagline {
+                font-family: var(--font-display);
+                font-size: 1.6rem;
+                line-height: 1.35;
+                color: var(--on-dark);
+                margin: 0;
+            }
+
+            .auth-form-panel {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 40px 36px;
+                background: var(--ink-soft);
+            }
+
             .auth-box p {
                 line-height: 1.55;
             }
-            
+
             .auth-field {
                 margin-bottom: 14px;
             }
-            
+
             .auth-label {
                 display: block;
                 font-size: 0.75rem;
@@ -1114,12 +1216,43 @@
                 margin-bottom: 6px;
                 font-weight: 500;
             }
-            
+
             .auth-box .search-input {
                 margin-bottom: 0;
                 background-color: var(--ink);
                 border: 1px solid var(--line-dark);
                 padding: 11px 13px;
+            }
+
+            .auth-box {
+                width: 100%;
+                max-width: 320px;
+                display: flex;
+                flex-direction: column;
+                color: var(--on-dark);
+                padding: 0;
+                border: none;
+                box-shadow: none;
+                background: none;
+            }
+
+            .auth-box h2 {
+                text-align: left;
+                margin: 0 0 6px;
+            }
+
+            .auth-toggle-text {
+                text-align: left;
+                margin: 0 0 20px;
+            }
+
+            @media (max-width: 640px) {
+                .auth-visual {
+                    display: none;
+                }
+                .auth-shell {
+                    max-width: 380px;
+                }
             }
             
             .password-wrapper {
@@ -1152,21 +1285,24 @@
             
             .auth-submit-btn {
                 width: 100%;
-                padding: 12px;
+                padding: 13px;
                 border-radius: var(--r-md);
-                border: 1px solid var(--brass);
-                background: var(--brass);
-                color: #1a1510;
+                border: none;
+                background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
+                color: #1a1015;
                 cursor: pointer;
-                font-size: 0.94rem;
+                font-size: 0.95rem;
                 font-weight: 600;
                 margin: 16px 0 4px;
-                transition: background-color 0.18s var(--ease), border-color 0.18s var(--ease);
+                transition: filter 0.18s var(--ease), transform 0.15s var(--ease);
             }
             
             .auth-submit-btn:hover {
-                background: var(--brass-dark);
-                border-color: var(--brass-dark);
+                filter: brightness(1.08);
+            }
+
+            .auth-submit-btn:active {
+                transform: scale(0.98);
             }
             
             .auth-toggle-text {
@@ -1201,7 +1337,6 @@
                 color: #c79d78;
             }
             
-            /* Autofill hook — used by JS, keep */
             @keyframes onAutoFillStart {
                 from { opacity: 1; }
                 to   { opacity: 1; }
@@ -1212,6 +1347,28 @@
                 -webkit-text-fill-color: var(--on-dark);
                 box-shadow: 0 0 0 1000px var(--ink) inset;
                 caret-color: var(--on-dark);
+            }
+
+            .input-icon-wrapper {
+                position: relative;
+            }
+
+            .input-icon-wrapper .search-input {
+                padding-left: 38px;
+            }
+
+            .input-icon {
+                position: absolute;
+                left: 13px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 0.95rem;
+                opacity: 0.6;
+                pointer-events: none;
+            }
+
+            .password-wrapper .input-icon {
+                left: 13px;
             }
             
             /* ---------- Cursor glow ---------- */
@@ -1304,43 +1461,72 @@
     </head>
     <body>
         <div id="authOverlay" class="auth-overlay">
-            <form id="authForm" class="auth-box" autocomplete="on">
-                <h2 id="authTitle">Log In</h2>
-
-                <div class="auth-field">
-                    <label for="authUsername" class="auth-label">Username</label>
-                    <input type="text" id="authUsername" class="search-input" placeholder="Username" autocomplete="off" name="new-username-field">
-                </div>
-
-                <div class="auth-field">
-                    <label for="authEmail" class="auth-label">Email</label>
-                    <input type="email" id="authEmail" class="search-input" placeholder="Email" autocomplete="email">
-                </div>
-
-                <div class="auth-field">
-                    <label for="authPassword" class="auth-label">Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="authPassword" class="search-input" placeholder="Password" autocomplete="new-password">
-                        <button type="button" id="togglePasswordBtn" class="password-toggle-btn" aria-label="Show password">👁</button>
+            <div class="auth-shell">
+                <div class="auth-visual">
+                    <div class="auth-sparkle auth-sparkle-1">✨</div>
+                    <div class="auth-sparkle auth-sparkle-2">✨</div>
+                    <div class="auth-sparkle auth-sparkle-3">✨</div>
+                    <div class="auth-visual-top">
+                        <h1 class="auth-hero-title">Mood Ring</h1>
+                        <p class="auth-hero-tagline">Your emotions, in color.</p>
+                    </div>
+                    <div class="auth-orbit">
+                        <span class="auth-orb" style="--i:0; --clr:#FFD400;">😄</span>
+                        <span class="auth-orb" style="--i:1; --clr:#A9CCE3;">😢</span>
+                        <span class="auth-orb" style="--i:2; --clr:#ABEBC6;">😐</span>
+                        <span class="auth-orb" style="--i:3; --clr:#D2B4DE;">😨</span>
+                        <span class="auth-orb" style="--i:4; --clr:#8B1E1E;">😠</span>
+                    </div>
+                    <div class="auth-visual-bottom">
+                        <p class="auth-tagline">Write it down,<br>watch it shift.</p>
                     </div>
                 </div>
 
-                <div class="auth-field">
-                    <label for="authConfirmPassword" class="auth-label">Confirm Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="authConfirmPassword" class="search-input" placeholder="Confirm Password" autocomplete="off">
-                        <button type="button" id="toggleConfirmPasswordBtn" class="password-toggle-btn" aria-label="Show password">👁</button>
-                    </div>
-                </div>
+                <div class="auth-form-panel">
+                    <form id="authForm" class="auth-box" autocomplete="on">
+                        <h2 id="authTitle">Log In</h2>
 
-                <p id="authError" class="auth-error"></p>
-                <button id="authSubmitBtn" type="button" class="auth-submit-btn">Log In</button>
-                <p class="auth-toggle-text">
-                    <span id="authToggleText">Don't have an account?</span>
-                    <button id="authToggleBtn" type="button" class="auth-link-btn">Sign Up</button>
-                </p>
-                <button id="continueGuestBtn" type="button" class="auth-link-btn" style="margin-top: 10px;">Continue as Guest →</button>
-            </form>
+                        <div class="auth-field">
+                            <label for="authUsername" class="auth-label">Username</label>
+                            <input type="text" id="authUsername" class="search-input" placeholder="Username" autocomplete="off" name="new-username-field">
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="authEmail" class="auth-label">Email</label>
+                            <div class="input-icon-wrapper">
+                                <span class="input-icon">✉️</span>
+                                <input type="email" id="authEmail" class="search-input" placeholder="Email" autocomplete="email">
+                            </div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="authPassword" class="auth-label">Password</label>
+                            <div class="password-wrapper">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" id="authPassword" class="search-input" placeholder="Password" autocomplete="off" style="padding-left: 38px;">
+                                <button type="button" id="togglePasswordBtn" class="password-toggle-btn" aria-label="Show password">👁</button>
+                            </div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label for="authConfirmPassword" class="auth-label">Confirm Password</label>
+                            <div class="password-wrapper">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" id="authConfirmPassword" class="search-input" placeholder="Confirm Password" autocomplete="off" style="padding-left: 38px;">
+                                <button type="button" id="toggleConfirmPasswordBtn" class="password-toggle-btn" aria-label="Show password">👁</button>
+                            </div>
+                        </div>
+
+                        <p id="authError" class="auth-error"></p>
+                        <button id="authSubmitBtn" type="button" class="auth-submit-btn">Log In</button>
+                        <p class="auth-toggle-text">
+                            <span id="authToggleText">Don't have an account?</span>
+                            <button id="authToggleBtn" type="button" class="auth-link-btn">Sign Up</button>
+                        </p>
+                        <button id="continueGuestBtn" type="button" class="auth-link-btn" style="margin-top: 10px;">Continue as Guest →</button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <div id="lockedOverlay" class="auth-overlay hidden">
@@ -1445,7 +1631,7 @@
             <button id="menuRenameBtn" class="menu-item">📜 Rename</button>
             <button id="menuDeleteBtn" class="menu-item menu-item-danger">🧨 Delete</button>
         </div>
-        <h1>Hello, Tell me about your day</h1>
+        <h1 id="mainGreeting">Hello, Tell me about your day</h1>
         <div class="chat-container" id="chatHistory"></div>
 
         <div id="inputBar" class="input-bar">
@@ -1664,8 +1850,8 @@
                 authOverlay.classList.remove("hidden");
             }
 
-           function updateGreeting() {
-                const h1 = document.querySelector("h1");
+            function updateGreeting() {
+                const h1 = document.getElementById("mainGreeting");
                 h1.classList.remove("temp-notice");
                 h1.textContent = loggedInUsername
                     ? `Hello ${loggedInUsername}, Tell me about your day`
@@ -2056,7 +2242,7 @@
                 voiceConversationActive = false;
                 currentChatId = "temp";
                 renderChatOnPage("temp");
-                const h1 = document.querySelector("h1");
+                const h1 = document.getElementById("mainGreeting");
                 h1.textContent = "You're using a Temporary Chat — this conversation won't be saved. So what's on your mind?";
                 h1.classList.add("temp-notice");
                 renderChatList();
@@ -2879,7 +3065,7 @@
                     loadAllChats();
                     startNewChat();
                     authOverlay.classList.add("hidden");
-                    document.querySelector("h1").textContent = "Hello, Tell me about your day";
+                    document.getElementById("mainGreeting").textContent = "Hello, Tell me about your day";
                     applyLockState();
                     updateAuthButtons();
                     return;
