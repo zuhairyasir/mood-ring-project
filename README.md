@@ -26,7 +26,7 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 
 
 
-
+https://github.com/user-attachments/assets/3ad915ba-6bd9-4dfd-8427-ed07ab60c132
 
 
 
