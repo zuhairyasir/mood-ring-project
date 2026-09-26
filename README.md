@@ -30,6 +30,7 @@ https://github.com/user-attachments/assets/3ad915ba-6bd9-4dfd-8427-ed07ab60c132
 
 
 
+
 Reworked the login/sign up page's look, and updated the sidebar so it reads as a journal rather than a chat interface.
 
 ---
