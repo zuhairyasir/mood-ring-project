@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 from openai import OpenAI
 load_dotenv()
@@ -9,8 +10,53 @@ class ReplyService:
             base_url="https://openrouter.ai/api/v1",
             api_key=os.environ.get("OPENROUTER_API_KEY"),
         )
-        self.model = "openrouter/free"
+        # Tried in order — first one that returns a valid-looking reply wins
+        self.model_fallback_chain = [
+            "openrouter/free",
+            "z-ai/glm-5.2:free",
+            "qwen/qwen3.8-27b:free",
+        ]
         self.app_url = os.environ.get("APP_URL", "http://127.0.0.1:5500")
+
+    def _looks_like_garbage(self, text):
+        """Catches leaked moderation/classifier metadata instead of a real reply."""
+        if not text or not text.strip():
+            return True
+        garbage_patterns = [
+            r"user safety\s*:",
+            r"safety\s*:\s*(safe|unsafe)",
+            r"^\s*\{.*\}\s*$",   # a bare JSON blob instead of prose
+            r"content policy",
+            r"moderation\s*result",
+        ]
+        lowered = text.lower()
+        return any(re.search(pattern, lowered) for pattern in garbage_patterns)
+
+    def _call_model(self, model, prompt):
+        response = self.client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            extra_headers={
+                "HTTP-Referer": self.app_url,
+                "X-Title": "Mood Ring Journal",
+            },
+        )
+        return response.choices[0].message.content
+
+    def _generate_with_fallback(self, prompt):
+        last_error = None
+        for model in self.model_fallback_chain:
+            try:
+                content = self._call_model(model, prompt)
+                if not self._looks_like_garbage(content):
+                    return content
+                print(f"Model {model} returned garbage output, trying next fallback.")
+            except Exception as e:
+                last_error = e
+                print(f"Model {model} failed: {e}")
+        if last_error:
+            print(f"All fallback models failed. Last error: {last_error}")
+        return None
 
     def generate_reply(self, text, emotion):
         prompt = (
@@ -41,19 +87,10 @@ class ReplyService:
             f"naturally in Roman Urdu or mixed English-Urdu too, the way a real bilingual "
             f"friend would text back — don't switch to pure English.\n"
         )
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                extra_headers={
-                    "HTTP-Referer": self.app_url,
-                    "X-Title": "Mood Ring Journal",
-                },
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            print(f"OpenRouter reply generation failed: {e}")
+        result = self._generate_with_fallback(prompt)
+        if result is None:
             return "I'm having a little trouble finding the words right now — mind trying again in a moment?"
+        return result
 
     def generate_title(self, text):
         title_prompt = (
@@ -61,16 +98,7 @@ class ReplyService:
             f"3 to 5 words maximum, no punctuation, no quotation marks: "
             f"\"{text}\""
         )
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": title_prompt}],
-                extra_headers={
-                    "HTTP-Referer": self.app_url,
-                    "X-Title": "Mood Ring Journal",
-                },
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            print(f"OpenRouter title generation failed: {e}")
+        result = self._generate_with_fallback(title_prompt)
+        if result is None:
             return "Untitled entry"
+        return result.strip()

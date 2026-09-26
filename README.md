@@ -26,10 +26,12 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 - **Real-time emotion detection** via a Hugging Face Transformers model, with confidence scoring
 - **Dynamic mood reactive theme** — automatically shifts the page background color to mirror the dominant detected emotion of your entry
 - **AI-generated replies** via a hosted LLM through OpenRouter, prompted specifically to sound like a perceptive friend rather than a generic support bot
+- **Multi-model reliability chain** — if a model returns malformed or leaked-metadata output (e.g. stray moderation text instead of a real reply), or fails outright, the request automatically falls through to the next model in a pinned fallback list before ever showing an error to the user
 - **"Why this emotion?"** — a second AI call gives its best-effort interpretation of what triggered a classification (framed honestly as an interpretation, not the model's actual internals)
 
 ### Conversations
 - Persistent, multi-chat sidebar with **star, rename, delete, and folders**
+- **Calendar-organized chat history** — unfoldered chats are grouped into collapsible Year → Month → Day sections, each conversation labeled with the exact time it was created
 - **Folder picker** with one-click chips for existing folders, plus a "remove from folder" shortcut
 - **Trie-based search** (a hand-built prefix tree) across all saved entries
 - **Temporary ("ghost") chats** that are never saved anywhere
@@ -68,11 +70,12 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 | Layer | Technology |
 |---|---|
 | Backend | Python, FastAPI, Uvicorn |
-| Emotion detection | Hugging Face Transformers (local model) |
-| AI replies | OpenRouter (hosted LLM API, OpenAI-compatible) |
+| Emotion detection | Hugging Face Transformers (local model, CPU) |
+| AI replies | OpenRouter (hosted LLM API, OpenAI-compatible), with a multi-model fallback chain |
 | Accounts | SQLite, bcrypt |
 | Analytics | Pandas, Matplotlib |
 | Frontend | Vanilla JavaScript, HTML, CSS (no framework) |
+| Hosting | Render (free tier): FastAPI backend as a Web Service, static frontend as a Static Site |
 
 ---
 
@@ -83,7 +86,7 @@ mood-ring-journal/
 ├── main.py                # FastAPI app: routes and orchestration
 ├── models.py               # Pydantic request/response models
 ├── emotion_service.py       # EmotionService — Hugging Face classifier wrapper
-├── reply_service.py         # ReplyService — OpenRouter prompt design and calls
+├── reply_service.py         # ReplyService — OpenRouter prompt design, calls, and fallback chain
 ├── stats_service.py         # StatsService — Pandas/Matplotlib chart generation
 ├── search_service.py        # SearchService — Trie-based prefix search
 ├── auth_service.py          # AuthService — signup/login, sessions, bcrypt
@@ -114,13 +117,14 @@ Activate it:
 ```bash
 pip install -r requirements.txt
 ```
+`requirements.txt` pins the CPU-only build of PyTorch (via `--extra-index-url https://download.pytorch.org/whl/cpu`) — the emotion classifier runs on CPU, so the much larger CUDA/GPU build is unnecessary and would only slow down install and hosting.
 
 ### 3. Set up your API key
 Create a `.env` file in the project root:
 ```
 OPENROUTER_API_KEY=your_key_here
 ```
-Get a free key at [openrouter.ai/keys](https://openrouter.ai/keys). Reply and title generation currently use OpenRouter's free-tier model routing — free model availability on OpenRouter shifts over time, so the `self.model` value in `reply_service.py` is worth checking periodically if replies start failing.
+Get a free key at [openrouter.ai/keys](https://openrouter.ai/keys). Reply and title generation route through a pinned fallback chain of OpenRouter models (see `reply_service.py`'s `model_fallback_chain`) rather than a single model, since free-tier model availability on OpenRouter shifts over time and a pinned model can be deprecated, rate-limited, or occasionally return malformed output. If replies start failing outright, this list is the first thing to check.
 
 ### 4. Run the backend
 ```bash
@@ -136,6 +140,16 @@ python -m http.server 5500
 Open `http://127.0.0.1:5500` in your browser.
 
 > Voice input uses the browser's Speech Recognition API, which is Chromium-only (Chrome, Edge). In other browsers the mic button hides itself and everything else works as normal.
+
+---
+
+## Deployment
+
+The app is deployed on [Render](https://render.com)'s free tier as two separate services: a Python Web Service running the FastAPI backend, and a Static Site serving `index.html` directly.
+
+A few free-tier characteristics worth knowing if you're trying the live version:
+- The backend spins down after 15 minutes of inactivity and takes roughly 30–60 seconds to wake back up on the next request — the first message after a period of idleness will be slow
+- SQLite runs on Render's ephemeral filesystem on the free tier, so account data is not guaranteed to persist across redeploys or long idle periods — this deployment is a live demo, not a durable account store
 
 ---
 
@@ -171,16 +185,17 @@ This measures classifier accuracy against a hand labeled test set (with per emot
 - Can only detect one emotion at a time (No multiple emotions)
 - The confidence-threshold fallback reduces false-certainty display but does not correct the underlying classification — a confidently wrong prediction above the threshold is still shown as-is
 - Speech recognition and speech synthesis depend on the browser's built-in engines, so voice quality and language support vary by platform
-- Free-tier model availability on OpenRouter changes without notice; a pinned model can be deprecated or moved to paid-only, which is why `reply_service.py` currently favors OpenRouter's auto-routing free model over a single pinned slug
+- Free-tier model availability and behavior on OpenRouter changes without notice — a pinned model can be deprecated, moved to paid-only, or occasionally return malformed output (e.g. leaked moderation metadata instead of a reply). The reply service's fallback chain and output-validation check mitigate this, but a sufficiently unusual failure mode could still slip through undetected
+- On Render's free tier, the backend cold-starts after inactivity and SQLite data isn't guaranteed to persist long-term (see Deployment)
 
 ---
 
 ## Possible Future Work
 
-- Migrate chat/settings storage from `localStorage` to per-user database records
+- Migrate chat/settings storage from `localStorage` to per-user database records, and off SQLite's ephemeral free-tier storage onto a persistent database
 - Fine-tune the emotion classifier (e.g. via LoRA), or evaluate a swap to a more fine-grained model (e.g. one trained on GoEmotions), specifically to address the implicit-anger weakness identified in evaluation
 - Expand the benchmark test set for more statistically robust accuracy claims
-- Add automatic fallback to a secondary pinned model if the primary OpenRouter model call fails, instead of surfacing a generic error message
+- Extend the reply service's garbage-output detection with additional patterns as new failure modes are observed in production
 
 ---
 

@@ -1574,6 +1574,7 @@
             let authMode = "login";
             let loggedInUsername = null;
             let voiceConversationActive = false;
+            let expandedCalendarNodes = new Set();
 
             // ===== Functions =====
             function speakReplyThenListen(text) {
@@ -1866,7 +1867,126 @@
                     }
                 });
                 starredIds.forEach(chatId => starredChatList.appendChild(buildChatItem(chatId)));
-                unstarredIds.forEach(chatId => chatList.appendChild(buildChatItem(chatId)));
+                renderCalendarTree(chatList, unstarredIds);
+            }
+            function extractTimestampFromId(id) {
+                const n = parseInt(id.split("_")[1], 10);
+                return isNaN(n) ? null : n;
+            }
+
+            function getChatTimestamp(chatId) {
+                return allChats[chatId].createdAt || extractTimestampFromId(chatId) || Date.now();
+            }
+
+            function ordinal(n) {
+                const suffixes = ["th", "st", "nd", "rd"];
+                const v = n % 100;
+                return n + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
+            }
+
+            function buildCalendarChatItem(chatId) {
+                const item = document.createElement("div");
+                item.className = "chat-list-item" + (chatId === currentChatId ? " active" : "");
+
+                const timeStr = new Date(getChatTimestamp(chatId)).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+                const titleSpan = document.createElement("span");
+                titleSpan.className = "chat-title";
+                titleSpan.textContent = `${timeStr} — ` + (allChats[chatId].starred ? "🌟 " : "") + (allChats[chatId].title || "New chat");
+                item.appendChild(titleSpan);
+
+                const kebabBtn = document.createElement("button");
+                kebabBtn.className = "kebab-btn";
+                kebabBtn.textContent = "⋮";
+                kebabBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    openChatOptionsMenu(chatId, kebabBtn);
+                });
+                item.appendChild(kebabBtn);
+
+                item.addEventListener("click", () => switchToChat(chatId));
+                return item;
+            }
+
+            function buildTreeHeader(label, key, onToggle) {
+                const isExpanded = expandedCalendarNodes.has(key);
+                const header = document.createElement("div");
+                header.className = "folder-header";
+                header.innerHTML =
+                    `<span class="folder-header-name">${isExpanded ? "📂" : "📁"} ${label}</span>` +
+                    `<span class="label-arrow${isExpanded ? "" : " collapsed"}">▾</span>`;
+                header.addEventListener("click", () => {
+                    if (isExpanded) {
+                        expandedCalendarNodes.delete(key);
+                    } else {
+                        expandedCalendarNodes.add(key);
+                    }
+                    onToggle();
+                });
+                return { header, isExpanded };
+            }
+
+            function renderCalendarTree(container, chatIds) {
+                container.innerHTML = "";
+
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+
+                const tree = {};
+                chatIds.forEach(id => {
+                    const d = new Date(getChatTimestamp(id));
+                    const year = d.getFullYear();
+                    const month = d.getMonth();
+                    const day = d.getDate();
+                    tree[year] = tree[year] || {};
+                    tree[year][month] = tree[year][month] || {};
+                    tree[year][month][day] = tree[year][month][day] || [];
+                    tree[year][month][day].push(id);
+                });
+
+                const years = Object.keys(tree).map(Number).sort((a, b) => b - a);
+
+                years.forEach(year => {
+                    const yearKey = `${year}`;
+                    const { header: yearHeader, isExpanded: yearExpanded } =
+                        buildTreeHeader(year, yearKey, () => renderChatList());
+                    container.appendChild(yearHeader);
+                    if (!yearExpanded) return;
+
+                    const yearContents = document.createElement("div");
+                    yearContents.className = "folder-contents";
+
+                    const months = Object.keys(tree[year]).map(Number).sort((a, b) => b - a);
+                    months.forEach(month => {
+                        const monthKey = `${year}-${month}`;
+                        const { header: monthHeader, isExpanded: monthExpanded } =
+                            buildTreeHeader(monthNames[month], monthKey, () => renderChatList());
+                        yearContents.appendChild(monthHeader);
+                        if (!monthExpanded) return;
+
+                        const monthContents = document.createElement("div");
+                        monthContents.className = "folder-contents";
+
+                        const days = Object.keys(tree[year][month]).map(Number).sort((a, b) => b - a);
+                        days.forEach(day => {
+                            const dayKey = `${year}-${month}-${day}`;
+                            const { header: dayHeader, isExpanded: dayExpanded } =
+                                buildTreeHeader(ordinal(day), dayKey, () => renderChatList());
+                            monthContents.appendChild(dayHeader);
+                            if (!dayExpanded) return;
+
+                            const dayContents = document.createElement("div");
+                            dayContents.className = "folder-contents";
+                            tree[year][month][day]
+                                .slice()
+                                .sort((a, b) => getChatTimestamp(b) - getChatTimestamp(a))
+                                .forEach(id => dayContents.appendChild(buildCalendarChatItem(id)));
+                            monthContents.appendChild(dayContents);
+                        });
+                        yearContents.appendChild(monthContents);
+                    });
+                    container.appendChild(yearContents);
+                });
             }
             function renderChatOnPage(chatId) {
                 chatHistory.innerHTML = "";
@@ -1928,7 +2048,7 @@
             function startNewChat(shouldCloseSidebar = true) {
                 tempChat = null;
                 const newId = "chat_" + Date.now();
-                allChats[newId] = { title: "", messages: [] };
+                allChats[newId] = { title: "", messages: [], createdAt: Date.now() };
                 switchToChat(newId, shouldCloseSidebar);
             }
             function startTemporaryChat() {
