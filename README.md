@@ -20,7 +20,13 @@ A ~6 minute walkthrough: writing an entry, the background shifting with the dete
 
 ---
 
+## Updates
+
 ## UI refresh — journal-oriented sidebar & redesigned login/sign up
+
+
+
+https://github.com/user-attachments/assets/9870ccca-c5fe-4327-b05e-7f2edd985da1
 
 
 
